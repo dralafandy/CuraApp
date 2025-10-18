@@ -962,20 +962,30 @@ class CRUDOperations:
         finally:
             conn.close()
 
+# database/crud.py
+
     def get_account_statement(self, account_type, holder_id):
         conn = self.db.get_connection()
         try:
-            acc_id_df = pd.read_sql_query(
-                "SELECT id FROM accounts WHERE account_type=? AND account_holder_id=?",
+            # First, get the full account record and check if it exists
+            acc_df = pd.read_sql_query(
+                "SELECT * FROM accounts WHERE account_type=? AND account_holder_id=?",
                 conn, params=(account_type, holder_id))
-            if acc_id_df.empty:
+
+            # If the DataFrame is empty, no account was found, so return None
+            if acc_df.empty:
                 return None
-            account_id = acc_id_df.iloc[0]['id']
-            tx = pd.read_sql_query(
+
+            # If an account was found, convert the first row to a dictionary
+            account = acc_df.iloc[0].to_dict()
+            account_id = account['id']
+
+            # Now, get the transactions for that account
+            transactions_df = pd.read_sql_query(
                 "SELECT * FROM financial_transactions WHERE account_id=? ORDER BY transaction_date DESC, created_at DESC",
                 conn, params=(account_id,))
-            acc = pd.read_sql_query("SELECT * FROM accounts WHERE id=?", conn, params=(account_id,)).iloc[0].to_dict()
-            return {'account': acc, 'transactions': tx}
+
+            return {'account': account, 'transactions': transactions_df}
         finally:
             conn.close()
 
@@ -1180,7 +1190,7 @@ class CRUDOperations:
             ''', conn, params=params).iloc[0].to_dict()
             monthly = pd.read_sql_query(f'''
                 SELECT strftime('%Y-%m', appointment_date) as month, COUNT(*) as appointment_count, SUM(total_cost) as revenue
-                FROM appointments WHERE doctor_id=? {date_cond}
+                FROM appointments a WHERE doctor_id=? {date_cond}
                 GROUP BY month ORDER BY month
             ''', conn, params=params)
             treatments = pd.read_sql_query(f'''
@@ -1225,7 +1235,7 @@ class CRUDOperations:
                        AVG(total_cost) as average_price,
                        MIN(appointment_date) as first_booking,
                        MAX(appointment_date) as last_booking
-                FROM appointments WHERE treatment_id=? {date_cond}
+                FROM appointments a WHERE treatment_id=? {date_cond}
             ''', conn, params=params).iloc[0].to_dict()
             return {
                 'treatment': tr_data,
