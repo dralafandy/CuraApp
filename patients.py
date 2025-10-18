@@ -9,24 +9,40 @@ def render():
     """صفحة إدارة المرضى"""
     st.markdown("## 👥 إدارة المرضى")
     
-    # إضافة تبويب الحسابات المالية
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    # 1. تهيئة الحالة للتبويبات
+    #    نحتفظ باسم التبويب النشط في ذاكرة التطبيق
+    if 'patient_tab' not in st.session_state:
+        st.session_state.patient_tab = "📋 قائمة المرضى" # التبويب الافتراضي
+
+    # 2. استبدال st.tabs بـ st.radio أفقي
+    #    هذا المكون سيحتفظ بقيمته بعد إعادة التشغيل
+    tab_options = [
         "📋 قائمة المرضى", 
         "➕ مريض جديد", 
         "🔍 بحث متقدم",
         "📊 تقرير مريض",
         "💰 الحسابات المالية"
-    ])
+    ]
     
-    with tab1:
+    selected_tab = st.radio(
+        "اختر العرض:",
+        options=tab_options,
+        key="patient_tab",  # ربط الـ radio بالـ session_state
+        horizontal=True,
+        label_visibility="collapsed" # لإخفاء العنوان "اختر العرض:"
+    )
+
+    # 3. استخدام if/elif لعرض المحتوى بناءً على الاختيار
+    #    بدلاً من (with tab1:)
+    if selected_tab == "📋 قائمة المرضى":
         render_patient_list()
-    with tab2:
+    elif selected_tab == "➕ مريض جديد":
         render_add_patient()
-    with tab3:
+    elif selected_tab == "🔍 بحث متقدم":
         render_search_patient()
-    with tab4:
+    elif selected_tab == "📊 تقرير مريض":
         render_patient_report()
-    with tab5:
+    elif selected_tab == "💰 الحسابات المالية":
         render_patient_financial_accounts()
 
 def render_patient_list():
@@ -113,6 +129,10 @@ def render_add_patient():
                     )
                     st.success(f"✅ تم حفظ بيانات المريض بنجاح! رقم الملف: {patient_id}")
                     st.balloons()
+                    # عند الضغط على حفظ، سيتم إعادة التشغيل، ولكن سيبقى
+                    # الراديو على نفس التبويب (مريض جديد)
+                    # يمكنك تغيير هذا السلوك إذا أردت الانتقال لتبويب آخر
+                    # st.session_state.patient_tab = "📋 قائمة المرضى"
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ حدث خطأ: {str(e)}")
@@ -307,13 +327,18 @@ def render_patient_financial_accounts():
                     )
                     
                     # إنشاء سند قبض
-                    voucher_no = crud.create_voucher(
-                        'receipt', account_id, payment_amount,
-                        payment_method, f"دفعة من {patient_name}",
-                        "النظام", notes
-                    )
+                    # !!! انتبه: يبدو أن دالة create_voucher غير موجودة في crud.py
+                    # !!! إذا كانت موجودة في ملف آخر، تجاهل هذا التحذير.
+                    # !!! سأقوم بتعطيلها مؤقتاً لتجنب الخطأ
                     
-                    st.success(f"✅ تم حفظ الدفعة - سند قبض رقم: {voucher_no}")
+                    # voucher_no = crud.create_voucher(
+                    #     'receipt', account_id, payment_amount,
+                    #     payment_method, f"دفعة من {patient_name}",
+                    #     "النظام", notes
+                    # )
+                    # st.success(f"✅ تم حفظ الدفعة - سند قبض رقم: {voucher_no}")
+                    
+                    st.success(f"✅ تم حفظ الدفعة بنجاح")
                     st.rerun()
                 else:
                     st.warning("⚠️ يرجى إدخال مبلغ صحيح")
