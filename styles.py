@@ -13,7 +13,6 @@ def load_custom_css():
             display: none !important;
         }
         
-        /* إخفاء زر القائمة (البرغر) */
         button[data-testid="baseButton-header"] {
             display: none !important;
         }
@@ -28,31 +27,45 @@ def load_custom_css():
             left: 0;
             right: 0;
             z-index: 1000;  
-            background-color: #ffffff; /* خلفية بيضاء */
+            background-color: #ffffff;
             padding: 5px 0;
             border-top: 1px solid #e0e0e0;
             box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+            /* إزالة الفراغات المضافة من Streamlit حول الأعمدة */
+            margin: 0 !important;
+            width: 100%;
+            max-width: 100%;
         }
         
         /* ضمان وجود مساحة أسفل المحتوى لمنع الشريط السفلي من حجب النص */
         .stApp {
             padding-bottom: 70px; 
         }
-        
-        /* تنسيق زر Streamlit العادي ليصبح أيقونة */
-        .mobile-nav-container button[data-testid^="stButton"] {
+
+        /* تنسيق الأزرار المحقونة بـ JS في الشريط السفلي */
+        .mobile-nav-container button.custom-nav-button {
+            /* إزالة التنسيقات الافتراضية للزر */
             background: none !important;
             border: none !important;
             padding: 0 !important;
             margin: 0 !important;
             height: auto !important;
+            box-shadow: none !important;
+            cursor: pointer;
+            width: 100%;
         }
-
-        /* محتوى الزر (الأيقونة + النص) */
+        
+        /* محتوى الزر (الأيقونة + النص) - هذا هو الكلاس الذي تم حقنه في app.py */
         .mobile-nav-container .nav-button-content {
             color: #7f8c8d; /* اللون الافتراضي (رمادي) */
             transition: color 0.3s ease;
             width: 100%;
+            /* تنسيق مرن للمحتوى */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.1;
+            padding: 5px 0; 
         }
 
         /* الأيقونة داخل الزر */
@@ -60,8 +73,10 @@ def load_custom_css():
             width: 20px;
             height: 20px;
             margin-bottom: 2px;
-            stroke-width: 2.2; /* لجعل الأيقونة أكثر وضوحاً */
+            stroke-width: 2.2; 
             transition: stroke 0.3s ease;
+            /* اللون يتغير عبر currentColor */
+            stroke: currentColor; 
         }
 
         /* النص تحت الأيقونة */
@@ -74,10 +89,6 @@ def load_custom_css():
         .mobile-nav-container .nav-button-content.active {
             color: #3498db; /* لون نشط (أزرق طبي) */
             font-weight: bold;
-        }
-        
-        .mobile-nav-container .nav-button-content.active .nav-icon svg {
-            stroke: #3498db; 
         }
 
         /* ======================================= */
@@ -119,26 +130,37 @@ def load_custom_css():
             margin-top: 20px;
         }
         
-        .more-page-button {
-            background-color: #f7f7f7;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px 10px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        /* تنسيق زر Streamlit في صفحة المزيد (يتم تطبيق هذا الكلاس عبر JS) */
+        button.more-page-button {
+            /* إعادة تعيين تنسيقات Streamlit */
+            background-color: #f7f7f7 !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 12px !important;
+            padding: 20px 10px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
             transition: all 0.2s ease;
             cursor: pointer;
-            height: 100%;
+            height: 100% !important;
         }
         
-        .more-page-button:hover {
-            background-color: #ffffff;
-            border-color: #3498db;
+        button.more-page-button:hover {
+            background-color: #ffffff !important;
+            border-color: #3498db !important;
             transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1) !important;
         }
 
-        .more-page-button .icon-svg svg {
+        /* تنسيق المحتوى المحقون داخل زر More Pages */
+        .more-page-button-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .more-page-button-content .icon-svg svg {
             width: 30px;
             height: 30px;
             color: #3498db;
@@ -146,7 +168,7 @@ def load_custom_css():
             stroke-width: 2;
         }
         
-        .more-page-button .label {
+        .more-page-button-content .label {
             font-size: 14px;
             font-weight: 600;
             color: #333;
