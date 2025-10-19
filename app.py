@@ -97,11 +97,6 @@ def render_top_stats_bar():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def handle_nav_click(page_id):
-    """دالة Python لمعالجة تغيير الصفحة"""
-    st.session_state.current_page = page_id
-    # يتم استدعاء st.rerun() من JavaScript بعد النقر
-
 def render_bottom_nav():
     """
     يرسم شريط التنقل السفلي الثابت باستخدام st.markdown و JavaScript
@@ -122,12 +117,22 @@ def render_bottom_nav():
             is_active = current_page == page['id']
             page_id = page['id']
 
-            # بناء الزر كـ HTML قابل للنقر
+            # بناء الزر كـ HTML قابل للنقر مع محفز JavaScript لتحديث حالة الجلسة
             button_html = f"""
             <div 
                 class='nav-button-content {"active" if is_active else ""}' 
                 id='nav-btn-{page_id}' 
-                onclick="window.parent.postMessage({{ type: 'streamlit:setSessionState', key: 'current_page', value: '{page_id}' }}, '*');"
+                onclick="
+                    // استخدام postMessage لتحديث حالة الجلسة وتسبب في إعادة التشغيل
+                    window.parent.postMessage(
+                        {{
+                            type: 'streamlit:setSessionState', 
+                            key: 'current_page', 
+                            value: '{page_id}' 
+                        }}, 
+                        '*'
+                    );
+                "
             >
                 <div class='nav-icon'>{page['icon_data']}</div>
                 <div class='nav-label'>{page['label']}</div>
@@ -140,61 +145,6 @@ def render_bottom_nav():
                 unsafe_allow_html=True
             )
             
-            # حقن JavaScript لمعالجة النقر وإعادة التشغيل
-            # نستخدم أسلوب postMessage لتمكين st.rerun() بعد النقر على الـ HTML
-            # هذا يضمن أن Streamlit سيلتقط التغيير في حالة الجلسة.
-            js_rerun = f"""
-            <script>
-            document.getElementById('nav-btn-{page_id}').onclick = function() {{
-                // تحديث حالة Streamlit عبر postMessage
-                // هذا يحاكي النقر على زر Streamlit ويسبب إعادة تشغيل
-                const data = {{
-                    type: "SET_PAGE",
-                    page_id: "{page_id}",
-                }};
-                
-                // تحديث حالة الجلسة وتسبب في إعادة التشغيل
-                window.parent.postMessage(
-                    {{
-                        type: "streamlit:setSessionState",
-                        key: "current_page",
-                        value: "{page_id}",
-                    }},
-                    "*"
-                );
-                
-                // بما أن Streamlit قد لا يعيد التشغيل فوراً، نستخدم trick لتحديث الصفحة
-                // لكن Streamlit عادة ما يتعامل مع postMessage لتحديث حالة الجلسة وإعادة التشغيل
-            }};
-            </script>
-            """
-            # استبدل st.markdown(js_rerun, unsafe_allow_html=True) بالكود التالي 
-            # للتأكد من أن الكود يعمل ضمن محتوى Streamlit
-            
-            # بما أننا نعتمد على postMessage، لا نحتاج إلى عرض السكريبت في كل مرة
-            # Streamlit يقوم بمعالجة التفاعل عبر postMessage بشكل جيد 
-            # عند استخدام st.session_state، يمكن الاعتماد على الإعدادات التلقائية لـ Streamlit
-            # لذلك نكتفي بكود HTML الذي يغير الحالة مباشرة.
-            
-    # نقوم بإضافة كود CSS خاص للتأكد من أن الـ Markdown يتصرف كـ Flex item بشكل صحيح داخل العمود
-    st.markdown("""
-        <style>
-            .stApp .stColumn {
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .nav-button-content {
-                cursor: pointer;
-                user-select: none;
-                -webkit-tap-highlight-color: transparent;
-                transition: transform 0.1s;
-            }
-            .nav-button-content:active {
-                transform: scale(0.95);
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
     st.markdown("</div>", unsafe_allow_html=True)
     
     NotificationCenter.show_urgent_toast_notifications()
