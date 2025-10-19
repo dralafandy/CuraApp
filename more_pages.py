@@ -36,7 +36,17 @@ def render():
                     <div 
                         class='more-page-button'
                         id='more-btn-{page_id}'
-                        onclick="window.parent.postMessage({{ type: 'streamlit:setSessionState', key: 'current_page', value: '{page_id}' }}, '*');"
+                        onclick="
+                            // استخدام postMessage لتحديث حالة الجلسة وتسبب في إعادة التشغيل
+                            window.parent.postMessage(
+                                {{
+                                    type: 'streamlit:setSessionState', 
+                                    key: 'current_page', 
+                                    value: '{page_id}' 
+                                }}, 
+                                '*'
+                            );
+                        "
                     >
                         <div class='more-page-button-content'>
                             <div class='icon-svg'>{page['icon_data']}</div>
