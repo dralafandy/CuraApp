@@ -61,6 +61,8 @@ def render_navbar():
         .navbar-menu {
             display: flex;
             gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .navbar-item {
             color: white;
@@ -81,48 +83,64 @@ def render_navbar():
     with st.container():
         st.markdown("""
             <div class="navbar">
-                <div class="navbar-brand">🏥 Cura Clinic</div>
+                <div class="navbar-brand">Cura Clinic</div>
                 <div class="navbar-menu">
-                    <div class="navbar-item">🏠 الرئيسية</div>
-                    <div class="navbar-item">📅 المواعيد</div>
-                    <div class="navbar-item">👥 المرضى</div>
-                    <div class="navbar-item">👨‍⚕️ الأطباء</div>
-                    <div class="navbar-item">💉 العلاجات</div>
-                    <div class="navbar-item">💰 المدفوعات</div>
-                    <div class="navbar-item">📦 المخزون</div>
-                    <div class="navbar-item">🏪 الموردين</div>
-                    <div class="navbar-item">💸 المصروفات</div>
-                    <div class="navbar-item">📊 التقارير</div>
-                    <div class="navbar-item">⚙️ الإعدادات</div>
-                    <div class="navbar-item">📝 سجل الأنشطة</div>
+                    <div class="navbar-item">الرئيسية</div>
+                    <div class="navbar-item">المواعيد</div>
+                    <div class="navbar-item">المرضى</div>
+                    <div class="navbar-item">الأطباء</div>
+                    <div class="navbar-item">العلاجات</div>
+                    <div class="navbar-item">المدفوعات</div>
+                    <div class="navbar-item">المخزون</div>
+                    <div class="navbar-item">الموردين</div>
+                    <div class="navbar-item">المصروفات</div>
+                    <div class="navbar-item">التقارير</div>
+                    <div class="navbar-item">الإعدادات</div>
+                    <div class="navbar-item">سجل الأنشطة</div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
-    # التحكم بالتنقل
-    menu_items = {
-        "🏠 الرئيسية": "dashboard",
-        "📅 المواعيد": "appointments",
-        "👥 المرضى": "patients",
-        "👨‍⚕️ الأطباء": "doctors",
-        "💉 العلاجات": "treatments",
-        "💰 المدفوعات": "payments",
-        "📦 المخزون": "inventory",
-        "🏪 الموردين": "suppliers",
-        "💸 المصروفات": "expenses",
-        "📊 التقارير": "reports",
-        "⚙️ الإعدادات": "settings",
-        "📝 سجل الأنشطة": "activity_log"
+    # قائمة العناصر بدون أيقونات للأزرار
+    menu_items = [
+        "الرئيسية",
+        "المواعيد",
+        "المرضى",
+        "الأطباء",
+        "العلاجات",
+        "المدفوعات",
+        "المخزون",
+        "الموردين",
+        "المصروفات",
+        "التقارير",
+        "الإعدادات",
+        "سجل الأنشطة"
+    ]
+    page_mapping = {
+        "الرئيسية": "dashboard",
+        "المواعيد": "appointments",
+        "المرضى": "patients",
+        "الأطباء": "doctors",
+        "العلاجات": "treatments",
+        "المدفوعات": "payments",
+        "المخزون": "inventory",
+        "الموردين": "suppliers",
+        "المصروفات": "expenses",
+        "التقارير": "reports",
+        "الإعدادات": "settings",
+        "سجل الأنشطة": "activity_log"
     }
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
 
-    cols = st.columns(len(menu_items))
-    for idx, (label, page_id) in enumerate(menu_items.items()):
-        with cols[idx]:
-            if st.button(label, key=f"nav_{page_id}", use_container_width=True):
-                st.session_state.current_page = page_id
-                st.rerun()
+    # تنظيم الأزرار في صفوف (4 أزرار لكل سطر)
+    for i in range(0, len(menu_items), 4):
+        cols = st.columns(4)
+        for j, label in enumerate(menu_items[i:i+4]):
+            with cols[j]:
+                if st.button(label, key=f"nav_{page_mapping[label]}", use_container_width=True):
+                    st.session_state.current_page = page_mapping[label]
+                    st.rerun()
 
     # اختيار الثيم
     theme_map = {
