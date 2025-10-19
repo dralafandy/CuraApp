@@ -30,46 +30,31 @@ def render():
                 page = MORE_PAGES[idx]
                 with cols[j]:
                     
-                    # 1. HTML المحتوى البصري للزر
-                    button_html = f"""
+                    # 1. بناء المحتوى البصري (الأيقونة والنص) باستخدام HTML
+                    button_label_html = f"""
                     <div class='more-page-button-content'>
                         <div class='icon-svg'>{page['icon_data']}</div>
                         <div class='label'>{page['label']}</div>
                     </div>
                     """
                     
-                    # تهريب HTML بشكل صحيح للـ JavaScript
-                    escaped_html = button_html.replace('"', '\\"').replace('\n', ' ').strip()
                     button_key = f"more_nav_{page['id']}"
                     
-                    # 2. عرض زر Streamlit (سيظهر فارغاً مبدئياً)
+                    # 2. عرض زر Streamlit باستخدام HTML المحقون كـ label
                     if st.button(
-                        label=" ", # مسافة كاسم للزر
+                        label=button_label_html, 
                         key=button_key, 
                         use_container_width=True
                     ):
                         st.session_state.current_page = page['id']
                         st.rerun()
 
-                    # 3. حقن المحتوى البصري داخل الزر باستخدام JavaScript
-                    js_injection = f"""
-                    <script>
-                    setTimeout(() => {{ // تأخير بسيط لضمان تحميل Streamlit للزر
-                        try {{
-                            const button = document.querySelector('[data-testid="stButton"] button[key="{button_key}"]');
-                            if (button && button.innerHTML.trim() === '') {{ // تحقق من الفراغ
-                                // استبدال محتوى الزر بالـ HTML المخصص
-                                button.innerHTML = "{escaped_html}";
-                                // إضافة كلاسات للـ CSS لتنسيق الزر نفسه (موجودة في styles.py)
-                                button.classList.add('more-page-button'); 
-                            }}
-                        }} catch (e) {{
-                            console.error("Error injecting more pages HTML:", e);
-                        }}
-                    }}, 50); 
-                    </script>
-                    """
-                    st.markdown(js_injection, unsafe_allow_html=True)
+                    # حقن الـ CSS للسماح بـ HTML داخل الـ label
+                    st.markdown(
+                        f"<style>button[key='{button_key}'] {{ padding: 20px 10px !important; }}</style>", 
+                        unsafe_allow_html=True
+                    )
+
 
     st.markdown("</div>", unsafe_allow_html=True)
 
