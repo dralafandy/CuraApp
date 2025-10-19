@@ -52,7 +52,6 @@ load_custom_css()
 # ==================================================================================
 
 # قائمة الصفحات الأساسية للتنقل السفلي (أيقونات Lucide Icons)
-# *ملاحظة: تم تضمين كود SVG للأيقونات لضمان ظهورها دون الحاجة لاستيراد مكتبة خارجية في Streamlit*
 BOTTOM_NAV_PAGES = [
     {'id': 'dashboard', 'label': 'الرئيسية', 'icon_data': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
     {'id': 'appointments', 'label': 'المواعيد', 'icon_data': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-check"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>'},
@@ -99,7 +98,10 @@ def render_top_stats_bar():
 
 
 def render_bottom_nav():
-    """يرسم شريط التنقل السفلي الثابت بأيقونات Lucide باستخدام حقن JS لتجاوز Streamlit."""
+    """
+    يرسم شريط التنقل السفلي الثابت.
+    **يعتمد على دمج HTML مباشرة في label الزر لتجاوز مشاكل حقن JS.**
+    """
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
         
@@ -113,54 +115,31 @@ def render_bottom_nav():
         with cols[idx]:
             is_active = current_page == page['id']
             
-            # 1. HTML المحتوى البصري للزر (الأيقونة والنص)
-            button_html = f"""
+            # 1. بناء المحتوى البصري (الأيقونة والنص) باستخدام HTML
+            # الكلاس 'active' يتم إضافته في Python مباشرة
+            button_label_html = f"""
             <div class='nav-button-content {"active" if is_active else ""}'>
                 <div class='nav-icon'>{page['icon_data']}</div>
                 <div class='nav-label'>{page['label']}</div>
             </div>
             """
             
-            # تهريب HTML بشكل صحيح للـ JavaScript
-            escaped_html = button_html.replace('"', '\\"').replace('\n', ' ').strip()
-            # استخدام key فريد
-            button_key = f"nav_bottom_{page['id']}"
-
-            # 2. عرض زر Streamlit ليعمل كمنطقة قابلة للنقر
+            # 2. عرض زر Streamlit باستخدام HTML المحقون كـ label
             if st.button(
-                label=" ", # مسافة كاسم للزر لكي يتمكن JS من التعرف عليه واستبداله
-                key=button_key,
+                # استخدام HTML كـ label مع تحديد أن Streamlit يجب أن يعرضه كـ HTML
+                label=button_label_html, 
+                key=f"nav_bottom_{page['id']}",
                 use_container_width=True
             ):
                  st.session_state.current_page = page['id']
                  st.rerun()
             
-            # 3. حقن المحتوى البصري داخل الزر باستخدام JavaScript
-            js_injection = f"""
-            <script>
-            setTimeout(() => {{ // تأخير بسيط لضمان تحميل Streamlit للزر
-                try {{
-                    // نستخدم key الزر لتحديد مكانه بدقة عبر data-testid والـ key
-                    const button = document.querySelector('[data-testid="stButton"] button[key="{button_key}"]');
-                    
-                    if (button && button.innerHTML.trim() === '') {{ // تحقق من الفراغ
-                        // استبدال محتوى الزر بالـ HTML المخصص
-                        button.innerHTML = "{escaped_html}";
-                        
-                        // إضافة كلاسات للـ CSS لتنسيق الزر نفسه
-                        button.classList.add('custom-nav-button'); 
-                        if ({'true' if is_active else 'false'}) {{
-                            button.classList.add('active');
-                        }}
-                    }}
-                }} catch (e) {{
-                    console.error("Error injecting nav HTML:", e);
-                }}
-            }}, 50); 
-            </script>
-            """
-            st.markdown(js_injection, unsafe_allow_html=True)
-            
+            # حقن الـ CSS للسماح بـ HTML داخل الـ label
+            # (لا يحتاج الكود إلى تغيير، لكن نضمن أنه موجود لـ HTML المحقون)
+            st.markdown(
+                f"<style>button[key='nav_bottom_{page['id']}'] {{ background: none; border: none; padding: 0; margin: 0; box-shadow: none; }}</style>", 
+                unsafe_allow_html=True
+            )
 
     st.markdown("</div>", unsafe_allow_html=True)
     
