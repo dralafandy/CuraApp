@@ -1,28 +1,23 @@
 import streamlit as st
 
 def load_custom_css():
-    """تطبيق الـ CSS اللازم لتثبيت الشريط السفلي وتنسيقات الأيقونات."""
+    """تطبيق الـ CSS اللازم لتثبيت الشريط السفلي وتنسيقات أزرار Streamlit."""
     
-    # CSS العام
     css_code = """
         <style>
         /* ======================================= */
-        /* 1. إخفاء الشريط الجانبي الافتراضي */
+        /* 1. إخفاء الشريط الجانبي وبعض عناصر Streamlit */
         /* ======================================= */
-        /* عند استخدام وضع 'collapsed' في الهاتف */
         section[data-testid="stSidebar"] {
             display: none !important;
         }
-        
-        /* إخفاء زر القائمة في الرأس الذي يظهر في وضع الهاتف */
         button[data-testid="baseButton-header"] {
             display: none !important;
         }
-
-        /* ======================================= */
-        /* 2. تنسيق شريط التنقل السفلي (الهواتف) */
-        /* ======================================= */
         
+        /* ======================================= */
+        /* 2. تنسيق حاوية شريط التنقل السفلي */
+        /* ======================================= */
         .mobile-nav-container {
             position: fixed; 
             bottom: 0;      
@@ -30,7 +25,7 @@ def load_custom_css():
             right: 0;
             z-index: 1000;  
             background-color: #ffffff;
-            padding: 5px 0;
+            padding: 5px 0 0 0;
             border-top: 1px solid #e0e0e0;
             box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
             margin: 0 !important;
@@ -38,67 +33,73 @@ def load_custom_css():
             max-width: 100%;
         }
         
-        /* ضمان وجود مساحة أسفل المحتوى لمنع الشريط السفلي من حجب النص */
+        /* ضمان وجود مساحة أسفل المحتوى */
         .stApp {
             padding-bottom: 70px; 
         }
+        
+        /* إزالة الهوامش الداخلية للأعمدة في الشريط السفلي */
+        .mobile-nav-container [data-testid="stVerticalBlock"] > div:nth-child(2) > div {
+             gap: 0px !important; /* لتقليل المسافة بين الأزرار */
+        }
 
-        /* هذا التنسيق مهم لتمكين حيلة الزر الشفاف */
-        .stApp .stColumn {
-            padding: 0 !important;
+        /* ======================================= */
+        /* 3. تنسيق أزرار التنقل (st.button) */
+        /* ======================================= */
+        
+        /* استهداف زر Streamlit الأصلي */
+        .mobile-nav-container button {
+            /* إزالة كل تنسيق Streamlit الافتراضي */
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 5px 0px !important;
             margin: 0 !important;
-            position: relative; /* يجب أن يكون العمود بوضع نسبي */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* تنسيق المحتوى (الأيقونة + النص) داخل الزر (الآن هو الـ DIV المنسق) */
-        .nav-button-content {
-            color: #7f8c8d; /* اللون الافتراضي (رمادي) */
-            transition: color 0.3s ease;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1.1;
-            padding: 5px 0; 
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            transition: transform 0.1s;
-        }
-        
-        /* تأثير النقر للهواتف (سيتم تفعيله من خلال النقر على الزر الشفاف) */
-        .nav-button-content:active {
-            transform: scale(0.95);
+            height: 100% !important;
+            width: 100% !important;
+            
+            /* تنسيق المحتوى ليكون عمودياً */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            
+            /* لون غير نشط (رمادي) */
+            color: #7f8c8d !important; 
+            transition: color 0.2s ease, transform 0.1s;
         }
 
-        /* تنسيق الأيقونة (يتم تطبيقها على عنصر SVG مباشرة) */
-        .nav-button-content .nav-icon svg {
-            width: 20px;
-            height: 20px;
-            margin-bottom: 2px;
-            stroke-width: 2.2; 
-            transition: stroke 0.3s ease;
-            stroke: currentColor; 
-        }
-
-        /* النص تحت الأيقونة */
-        .nav-label {
-            font-size: 10px;
+        /* تنسيق المحتوى داخل الزر (يحتوي على الأيقونة والنص) */
+        .mobile-nav-container button p {
+            font-size: 10px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.1 !important;
             white-space: nowrap;
         }
         
-        /* تنسيق الزر النشط (الكلاس active يتم إضافته في Python) */
-        .nav-button-content.active {
-            color: #3498db !important; /* لون نشط (أزرق طبي) */
-            font-weight: bold;
+        /* تنسيق الأيقونات (باستخدام FontAwesome/Emojis) */
+        .mobile-nav-container button span {
+            font-size: 20px !important; 
+            margin-bottom: 2px !important;
+            line-height: 1 !important;
         }
         
+        /* تأثير النقر للهواتف (Touch/Active) */
+        .mobile-nav-container button:active {
+            transform: scale(0.95);
+        }
 
         /* ======================================= */
-        /* 3. تنسيق شريط الإحصائيات العلوي */
+        /* 4. تنسيق الزر النشط (Active Button) */
+        /* ======================================= */
+        /* Streamlit يضيف كلاس .st-emotion-xyz.st-emotion-abc:focus (تعتمد على الإصدار) */
+        /* بما أننا لا نستطيع الاعتماد على كلاس ثابت، سنستخدم حيلة بسيطة في app.py */
+        
+        
+        /* ======================================= */
+        /* 5. تنسيق شريط الإحصائيات العلوي */
         /* ======================================= */
         .top-stats-bar {
             padding: 5px 0 15px 0;
@@ -127,7 +128,7 @@ def load_custom_css():
         .stat-info { background-color: #f9f9f9; color: #595959; border: 1px solid #d9d9d9; } 
         
         /* ======================================= */
-        /* 4. تنسيق شاشة 'المزيد' (More Pages) */
+        /* 6. تنسيق شاشة 'المزيد' (More Pages) */
         /* ======================================= */
         .more-pages-grid {
             display: grid;
@@ -136,29 +137,42 @@ def load_custom_css():
             margin-top: 20px;
         }
         
-        .more-page-button-content {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+        /* تنسيق زر الـ Grid لجعله يشبه البطاقة */
+        .more-pages-grid button {
+            background-color: #f7f7f7 !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 12px !important;
+            padding: 20px 10px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.2s ease !important;
+            
+            /* إعادة تعيين تنسيقات النص والأيقونات داخل بطاقة الـ Grid */
+            color: #333 !important; /* اللون الافتراضي للـ Grid */
         }
-
-        .more-page-button-content .icon-svg svg {
-            width: 30px;
-            height: 30px;
-            color: #3498db;
-            margin-bottom: 10px;
-            stroke-width: 2;
+        .more-pages-grid button:hover {
+            background-color: #ffffff !important;
+            border-color: #3498db !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        .more-pages-grid button:active {
+            transform: scale(0.98);
         }
         
-        .more-page-button-content .label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
+        /* تنسيق الأيقونة داخل زر الـ Grid */
+        .more-pages-grid button span {
+            font-size: 30px !important; /* حجم أكبر */
+            color: #3498db !important; /* لون أزرق */
+            margin-bottom: 10px !important;
+            line-height: 1 !important;
         }
-
+        
+        /* تنسيق النص داخل زر الـ Grid */
+        .more-pages-grid button p {
+            font-size: 14px !important;
+            font-weight: 600 !important;
+        }
+        
         </style>
     """
     st.markdown(css_code, unsafe_allow_html=True)
