@@ -1,111 +1,158 @@
-# styles.py
-
 import streamlit as st
 
-def load_custom_css(theme="blue"):
-    """تحميل الأنماط المخصصة حسب الثيم"""
+def load_custom_css():
+    """تطبيق الـ CSS اللازم لتثبيت الشريط السفلي وتنسيقات الأيقونات."""
     
-    themes = {
-        "blue": "#3b82f6",
-        "green": "#10b981",
-        "orange": "#f97316",
-        "pink": "#ec4899",
-        "purple": "#8b5cf6",
-        "dark": "#1f2937",
-    }
-    
-    primary_color = themes.get(theme, "#3b82f6")
-    
-    css = f"""
-    <style>
-    /* الشريط الجانبي */
-    [data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, {primary_color}15 0%, {primary_color}05 100%);
-    }}
-    
-    /* العناوين */
-    h1, h2, h3 {{
-        color: {primary_color};
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }}
-    
-    /* الأزرار */
-    .stButton>button {{
-        border-radius: 8px;
-        border: 1px solid {primary_color}30;
-        transition: all 0.3s ease;
-    }}
-    
-    .stButton>button:hover {{
-        background-color: {primary_color}20;
-        border-color: {primary_color};
-    }}
-    
-    /* البطاقات */
-    .main-header {{
-        background: linear-gradient(135deg, {primary_color}20 0%, {primary_color}10 100%);
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }}
-    
-    .main-header h1 {{
-        margin: 0;
-        font-size: 2.5rem;
-    }}
-    
-    .main-header p {{
-        margin: 0.5rem 0 0 0;
-        color: #6b7280;
-        font-size: 1.1rem;
-    }}
-    
-    /* الجداول */
-    [data-testid="stDataFrame"] {{
-        border-radius: 8px;
-        overflow: hidden;
-    }}
-    
-    /* المدخلات */
-    .stTextInput>div>div>input,
-    .stSelectbox>div>div>select,
-    .stTextArea>div>div>textarea {{
-        border-radius: 6px;
-        border: 1px solid {primary_color}30;
-    }}
-    
-    /* المقاييس */
-    [data-testid="stMetricValue"] {{
-        color: {primary_color};
-        font-size: 1.8rem;
-        font-weight: bold;
-    }}
-    
-    /* التنبيهات */
-    .stAlert {{
-        border-radius: 8px;
-    }}
-    
-    /* التبويبات */
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 8px;
-    }}
-    
-    .stTabs [data-baseweb="tab"] {{
-        border-radius: 8px 8px 0 0;
-        padding: 10px 20px;
-    }}
-    
-    .stTabs [aria-selected="true"] {{
-        background-color: {primary_color}20;
-    }}
-    
-    /* الخطوط العربية */
-    * {{
-        font-family: 'Cairo', 'Segoe UI', sans-serif;
-    }}
-    </style>
+    # CSS العام
+    css_code = """
+        <style>
+        /* ======================================= */
+        /* 1. إخفاء الشريط الجانبي الافتراضي */
+        /* ======================================= */
+        section[data-testid="stSidebar"] {
+            display: none !important;
+        }
+        
+        /* إخفاء زر القائمة (البرغر) */
+        button[data-testid="baseButton-header"] {
+            display: none !important;
+        }
+
+        /* ======================================= */
+        /* 2. تنسيق شريط التنقل السفلي (الهواتف) */
+        /* ======================================= */
+        
+        .mobile-nav-container {
+            position: fixed; 
+            bottom: 0;      
+            left: 0;
+            right: 0;
+            z-index: 1000;  
+            background-color: #ffffff; /* خلفية بيضاء */
+            padding: 5px 0;
+            border-top: 1px solid #e0e0e0;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* ضمان وجود مساحة أسفل المحتوى لمنع الشريط السفلي من حجب النص */
+        .stApp {
+            padding-bottom: 70px; 
+        }
+        
+        /* تنسيق زر Streamlit العادي ليصبح أيقونة */
+        .mobile-nav-container button[data-testid^="stButton"] {
+            background: none !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            height: auto !important;
+        }
+
+        /* محتوى الزر (الأيقونة + النص) */
+        .mobile-nav-container .nav-button-content {
+            color: #7f8c8d; /* اللون الافتراضي (رمادي) */
+            transition: color 0.3s ease;
+            width: 100%;
+        }
+
+        /* الأيقونة داخل الزر */
+        .mobile-nav-container .nav-icon svg {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 2px;
+            stroke-width: 2.2; /* لجعل الأيقونة أكثر وضوحاً */
+            transition: stroke 0.3s ease;
+        }
+
+        /* النص تحت الأيقونة */
+        .mobile-nav-container .nav-label {
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        
+        /* تنسيق الزر النشط */
+        .mobile-nav-container .nav-button-content.active {
+            color: #3498db; /* لون نشط (أزرق طبي) */
+            font-weight: bold;
+        }
+        
+        .mobile-nav-container .nav-button-content.active .nav-icon svg {
+            stroke: #3498db; 
+        }
+
+        /* ======================================= */
+        /* 3. تنسيق شريط الإحصائيات العلوي */
+        /* ======================================= */
+        .top-stats-bar {
+            padding: 5px 0 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            border-radius: 8px;
+            padding: 10px 5px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin: 5px;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        
+        .stat-success { background-color: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; } 
+        .stat-warning { background-color: #fffbe6; color: #faad14; border: 1px solid #ffe58f; } 
+        .stat-error { background-color: #fff1f0; color: #f5222d; border: 1px solid #ffa39e; } 
+        .stat-info { background-color: #f9f9f9; color: #595959; border: 1px solid #d9d9d9; } 
+        
+        /* ======================================= */
+        /* 4. تنسيق شاشة 'المزيد' (More Pages) */
+        /* ======================================= */
+        .more-pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .more-page-button {
+            background-color: #f7f7f7;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            height: 100%;
+        }
+        
+        .more-page-button:hover {
+            background-color: #ffffff;
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .more-page-button .icon-svg svg {
+            width: 30px;
+            height: 30px;
+            color: #3498db;
+            margin-bottom: 10px;
+            stroke-width: 2;
+        }
+        
+        .more-page-button .label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        </style>
     """
-    
-    st.markdown(css, unsafe_allow_html=True)
+    st.markdown(css_code, unsafe_allow_html=True)
+
