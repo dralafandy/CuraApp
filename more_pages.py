@@ -12,6 +12,11 @@ MORE_PAGES = [
 ]
 
 
+def handle_more_page_click(page_id):
+    """دالة Python لمعالجة تغيير الصفحة"""
+    st.session_state.current_page = page_id
+    st.rerun()
+
 def render():
     """الدالة الرئيسية لعرض صفحة المزيد"""
     st.header("☰ المزيد من وحدات النظام")
@@ -28,25 +33,14 @@ def render():
             idx = i + j
             if idx < num_pages:
                 page = MORE_PAGES[idx]
+                page_id = page['id']
+                
                 with cols[j]:
-                    page_id = page['id']
-                    
-                    # 1. بناء الزر كـ HTML قابل للنقر
+                    # 1. عرض الـ HTML المنسق (الأيقونة والنص)
                     button_html = f"""
                     <div 
                         class='more-page-button'
-                        id='more-btn-{page_id}'
-                        onclick="
-                            // استخدام postMessage لتحديث حالة الجلسة وتسبب في إعادة التشغيل
-                            window.parent.postMessage(
-                                {{
-                                    type: 'streamlit:setSessionState', 
-                                    key: 'current_page', 
-                                    value: '{page_id}' 
-                                }}, 
-                                '*'
-                            );
-                        "
+                        id='more-btn-content-{page_id}'
                     >
                         <div class='more-page-button-content'>
                             <div class='icon-svg'>{page['icon_data']}</div>
@@ -54,16 +48,70 @@ def render():
                         </div>
                     </div>
                     """
-                    
-                    # 2. عرض HTML بدلاً من st.button
-                    st.markdown(
-                        button_html,
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(button_html, unsafe_allow_html=True)
+
+                    # 2. وضع زر Streamlit حقيقي وشفاف فوق الـ HTML المنسق
+                    with st.form(key=f"more_nav_form_{page_id}", clear_on_submit=False):
+                        submitted = st.form_submit_button(
+                            label=" ", 
+                            use_container_width=True,
+                            key=f"more_nav_btn_{page_id}_submit"
+                        )
+                        
+                        if submitted:
+                            handle_more_page_click(page_id)
+                
+                # حقن CSS إضافي لزر More Pages
+                st.markdown(f"""
+                    <style>
+                        /* استهداف الحاوية الرئيسية للزر (النموذج) */
+                        div[data-testid="stForm"] > div:has(button[key="more_nav_btn_{page_id}_submit"]) {{
+                            position: absolute; /* وضعه بشكل مطلق لتغطية المحتوى المنسق */
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            height: 100%;
+                            width: 100%;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            z-index: 1001; 
+                        }}
+                        /* جعل الزر نفسه شفافاً */
+                        button[key="more_nav_btn_{page_id}_submit"] {{
+                            background: transparent !important;
+                            color: transparent !important;
+                            border: none !important;
+                            box-shadow: none !important;
+                            height: 100%;
+                            width: 100%;
+                            margin: 0;
+                            padding: 0;
+                            cursor: pointer;
+                        }}
+                        /* إخفاء تسمية النموذج */
+                        div[data-testid="stForm"] > div > div > label {{
+                            display: none !important;
+                        }}
+                        /* إعادة ترتيب الأعمدة لتكون حاوية للـ DIVs والأزرار */
+                        div[data-testid="stColumn"] {{
+                            position: relative; 
+                        }}
+
+                        /* تنسيق النقر على الـ DIV المنسق */
+                        .more-page-button {{
+                            transition: transform 0.1s;
+                        }}
+                        .more-page-button:active {{
+                            transform: scale(0.98);
+                        }}
+                    </style>
+                    """, unsafe_allow_html=True)
+
 
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # تنسيق الـ HTML الذي يحل محل زر Streamlit في Grid
+    # CSS العام لصفحة المزيد (لضمان ظهور الـ Grid)
     st.markdown("""
         <style>
             .more-page-button {
@@ -73,7 +121,6 @@ def render():
                 padding: 20px 10px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
                 transition: all 0.2s ease;
-                cursor: pointer;
                 user-select: none;
                 height: 100%;
                 display: flex;
@@ -86,9 +133,6 @@ def render():
                 border-color: #3498db;
                 transform: translateY(-2px);
                 box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-            }
-            .more-page-button:active {
-                transform: scale(0.98);
             }
         </style>
         """, unsafe_allow_html=True)
