@@ -43,21 +43,13 @@ def load_custom_css():
             padding-bottom: 70px; 
         }
 
-        /* تنسيق الأزرار في الشريط السفلي (العامة) */
-        .mobile-nav-container button {
-            background: none !important;
-            border: none !important;
+        /* نحتاج إلى إعادة تعيين الـ Padding والـ Margin داخل الأعمدة التي تحتوي على الأزرار */
+        .stApp .stColumn {
             padding: 0 !important;
             margin: 0 !important;
-            height: auto !important;
-            box-shadow: none !important;
-            cursor: pointer;
-            width: 100%;
-            /* إلغاء الـ Padding الافتراضي لـ Streamlit Button */
-            min-height: 0 !important;
         }
         
-        /* تنسيق المحتوى (الأيقونة + النص) داخل الزر */
+        /* تنسيق المحتوى (الأيقونة + النص) داخل الزر (لأن الزر أصبح div/markdown) */
         .nav-button-content {
             color: #7f8c8d; /* اللون الافتراضي (رمادي) */
             transition: color 0.3s ease;
@@ -67,10 +59,11 @@ def load_custom_css():
             align-items: center;
             line-height: 1.1;
             padding: 5px 0; 
+            cursor: pointer; /* ضروري لجعله يبدو قابلاً للنقر */
         }
 
         /* تنسيق الأيقونة (يتم تطبيقها على عنصر SVG مباشرة) */
-        .nav-button-content svg {
+        .nav-button-content .nav-icon svg {
             width: 20px;
             height: 20px;
             margin-bottom: 2px;
@@ -91,11 +84,6 @@ def load_custom_css():
             font-weight: bold;
         }
         
-        /* لضمان أن النص داخل الزر لا يظهر أبداً بخط تحته */
-        .stButton>button>div {
-            justify-content: center !important;
-        }
-
 
         /* ======================================= */
         /* 3. تنسيق شريط الإحصائيات العلوي */
@@ -128,6 +116,7 @@ def load_custom_css():
         
         /* ======================================= */
         /* 4. تنسيق شاشة 'المزيد' (More Pages) */
+        /* تم نقل تنسيقات النقر (more-page-button) إلى ملف more_pages.py */
         /* ======================================= */
         .more-pages-grid {
             display: grid;
@@ -136,26 +125,6 @@ def load_custom_css():
             margin-top: 20px;
         }
         
-        /* تنسيق الأزرار العامة في صفحة المزيد */
-        .more-pages-grid button {
-            background-color: #f7f7f7 !important;
-            border: 1px solid #e0e0e0 !important;
-            border-radius: 12px !important;
-            padding: 20px 10px !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            height: 100% !important;
-            min-height: 0 !important;
-        }
-        
-        .more-pages-grid button:hover {
-            background-color: #ffffff !important;
-            border-color: #3498db !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1) !important;
-        }
-
         /* تنسيق المحتوى داخل زر More Pages */
         .more-page-button-content {
             text-align: center;
