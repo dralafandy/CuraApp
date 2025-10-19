@@ -43,13 +43,18 @@ def load_custom_css():
             padding-bottom: 70px; 
         }
 
-        /* نحتاج إلى إعادة تعيين الـ Padding والـ Margin داخل الأعمدة التي تحتوي على الأزرار */
+        /* هذا التنسيق مهم لتمكين حيلة الزر الشفاف */
         .stApp .stColumn {
             padding: 0 !important;
             margin: 0 !important;
+            position: relative; /* يجب أن يكون العمود بوضع نسبي */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         
-        /* تنسيق المحتوى (الأيقونة + النص) داخل الزر (لأن الزر أصبح div/markdown) */
+        /* تنسيق المحتوى (الأيقونة + النص) داخل الزر (الآن هو الـ DIV المنسق) */
         .nav-button-content {
             color: #7f8c8d; /* اللون الافتراضي (رمادي) */
             transition: color 0.3s ease;
@@ -59,13 +64,12 @@ def load_custom_css():
             align-items: center;
             line-height: 1.1;
             padding: 5px 0; 
-            cursor: pointer; /* ضروري لجعله يبدو قابلاً للنقر */
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             transition: transform 0.1s;
         }
         
-        /* تأثير النقر للهواتف */
+        /* تأثير النقر للهواتف (سيتم تفعيله من خلال النقر على الزر الشفاف) */
         .nav-button-content:active {
             transform: scale(0.95);
         }
@@ -123,7 +127,7 @@ def load_custom_css():
         .stat-info { background-color: #f9f9f9; color: #595959; border: 1px solid #d9d9d9; } 
         
         /* ======================================= */
-        /* 4. تنسيق شاشة 'المزيد' (More Pages) - تم نقل تنسيقات النقر إلى more_pages.py */
+        /* 4. تنسيق شاشة 'المزيد' (More Pages) */
         /* ======================================= */
         .more-pages-grid {
             display: grid;
