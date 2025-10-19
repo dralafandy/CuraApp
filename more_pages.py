@@ -29,32 +29,57 @@ def render():
             if idx < num_pages:
                 page = MORE_PAGES[idx]
                 with cols[j]:
+                    page_id = page['id']
                     
-                    # 1. بناء المحتوى البصري (الأيقونة والنص) باستخدام HTML
-                    button_label_html = f"""
-                    <div class='more-page-button-content'>
-                        <div class='icon-svg'>{page['icon_data']}</div>
-                        <div class='label'>{page['label']}</div>
+                    # 1. بناء الزر كـ HTML قابل للنقر
+                    button_html = f"""
+                    <div 
+                        class='more-page-button'
+                        id='more-btn-{page_id}'
+                        onclick="window.parent.postMessage({{ type: 'streamlit:setSessionState', key: 'current_page', value: '{page_id}' }}, '*');"
+                    >
+                        <div class='more-page-button-content'>
+                            <div class='icon-svg'>{page['icon_data']}</div>
+                            <div class='label'>{page['label']}</div>
+                        </div>
                     </div>
                     """
                     
-                    button_key = f"more_nav_{page['id']}"
-                    
-                    # 2. عرض زر Streamlit باستخدام HTML المحقون كـ label
-                    if st.button(
-                        label=button_label_html, 
-                        key=button_key, 
-                        use_container_width=True
-                    ):
-                        st.session_state.current_page = page['id']
-                        st.rerun()
-
-                    # حقن الـ CSS للسماح بـ HTML داخل الـ label
+                    # 2. عرض HTML بدلاً من st.button
                     st.markdown(
-                        f"<style>button[key='{button_key}'] {{ padding: 20px 10px !important; }}</style>", 
+                        button_html,
                         unsafe_allow_html=True
                     )
 
-
     st.markdown("</div>", unsafe_allow_html=True)
+    
+    # تنسيق الـ HTML الذي يحل محل زر Streamlit في Grid
+    st.markdown("""
+        <style>
+            .more-page-button {
+                background-color: #f7f7f7;
+                border: 1px solid #e0e0e0;
+                border-radius: 12px;
+                padding: 20px 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                transition: all 0.2s ease;
+                cursor: pointer;
+                user-select: none;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .more-page-button:hover {
+                background-color: #ffffff;
+                border-color: #3498db;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            }
+            .more-page-button:active {
+                transform: scale(0.98);
+            }
+        </style>
+        """, unsafe_allow_html=True)
 
