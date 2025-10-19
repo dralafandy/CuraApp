@@ -64,11 +64,10 @@ BOTTOM_NAV_PAGES = [
 
 def render_top_stats_bar():
     """يعرض شريط إحصائيات علوي مرن يناسب الهاتف."""
-    # يجب التأكد من أن دالة crud.get_dashboard_stats() موجودة وتعمل بشكل صحيح
     try:
         stats = crud.get_dashboard_stats()
-    except Exception as e:
-        st.error(f"خطأ في تحميل الإحصائيات: {e}")
+    except Exception:
+        # fallback
         stats = {'today_appointments': 0, 'low_stock_items': 0}
     
     st.markdown("<div class='top-stats-bar'>", unsafe_allow_html=True)
@@ -88,7 +87,6 @@ def render_top_stats_bar():
     # 3. المصروفات الشهرية
     try:
         financial_summary = crud.get_financial_summary()
-        # نستخدم مفتاح مختلف إذا تم تحديث crud
         monthly_expenses = financial_summary.get('current_month_expenses', financial_summary.get('total_expenses', 0))
     except:
         monthly_expenses = 0 
@@ -115,43 +113,50 @@ def render_bottom_nav():
         with cols[idx]:
             is_active = current_page == page['id']
             
-            # HTML المحتوى البصري للزر (الأيقونة والنص)
-            # تم إضافة id فريد لتسهيل العثور عليه بواسطة JS لاحقًا
+            # 1. HTML المحتوى البصري للزر (الأيقونة والنص)
             button_html = f"""
-            <div class='nav-button-content {"active" if is_active else ""}' id='nav_content_{page['id']}'>
+            <div class='nav-button-content {"active" if is_active else ""}'>
                 <div class='nav-icon'>{page['icon_data']}</div>
                 <div class='nav-label'>{page['label']}</div>
             </div>
             """
             
-            # 1. عرض زر Streamlit ليعمل كمنطقة قابلة للنقر
+            # تهريب HTML بشكل صحيح للـ JavaScript
+            escaped_html = button_html.replace('"', '\\"').replace('\n', ' ').strip()
+            # استخدام key فريد
+            button_key = f"nav_bottom_{page['id']}"
+
+            # 2. عرض زر Streamlit ليعمل كمنطقة قابلة للنقر
             if st.button(
                 label=" ", # مسافة كاسم للزر لكي يتمكن JS من التعرف عليه واستبداله
-                key=f"nav_bottom_{page['id']}",
+                key=button_key,
                 use_container_width=True
             ):
                  st.session_state.current_page = page['id']
                  st.rerun()
             
-            # 2. حقن المحتوى البصري داخل الزر باستخدام JavaScript
-            # **تم تصحيح الخطأ هنا عبر استخدام سلسلة نصية عادية بدلاً من f-string للدالة replace**
-            # (نحتاج لنسخة من button_html تكون كل علامات الاقتباس بها مهربّة)
-            escaped_html = button_html.replace('"', '\\"').replace('\n', '')
-            
+            # 3. حقن المحتوى البصري داخل الزر باستخدام JavaScript
             js_injection = f"""
             <script>
-            // نستخدم key الزر لتحديد مكانه بدقة
-            const button = document.querySelector('[data-testid="stButton"] button[key="nav_bottom_{page['id']}"]');
-            if (button && button.innerHTML.trim() === ' ') {{
-                // استبدال محتوى الزر بالـ HTML المخصص
-                button.innerHTML = "{escaped_html}";
-                
-                // إضافة كلاسات للـ CSS لتنسيق الزر نفسه
-                button.classList.add('custom-nav-button'); 
-                if ({'true' if is_active else 'false'}) {{
-                    button.classList.add('active');
+            setTimeout(() => {{ // تأخير بسيط لضمان تحميل Streamlit للزر
+                try {{
+                    // نستخدم key الزر لتحديد مكانه بدقة عبر data-testid والـ key
+                    const button = document.querySelector('[data-testid="stButton"] button[key="{button_key}"]');
+                    
+                    if (button && button.innerHTML.trim() === '') {{ // تحقق من الفراغ
+                        // استبدال محتوى الزر بالـ HTML المخصص
+                        button.innerHTML = "{escaped_html}";
+                        
+                        // إضافة كلاسات للـ CSS لتنسيق الزر نفسه
+                        button.classList.add('custom-nav-button'); 
+                        if ({'true' if is_active else 'false'}) {{
+                            button.classList.add('active');
+                        }}
+                    }}
+                }} catch (e) {{
+                    console.error("Error injecting nav HTML:", e);
                 }}
-            }}
+            }}, 50); 
             </script>
             """
             st.markdown(js_injection, unsafe_allow_html=True)
