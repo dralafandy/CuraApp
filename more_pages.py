@@ -48,12 +48,15 @@ def render():
                         st.rerun()
 
                     # 2. حقن المحتوى البصري داخل الزر باستخدام JavaScript
+                    # **تم تصحيح الخطأ هنا**
+                    escaped_html = button_html.replace('"', '\\"').replace('\n', '')
+
                     js_injection = f"""
                     <script>
                     const button = document.querySelector('[data-testid="stButton"] button[key="more_nav_{page['id']}"]');
                     if (button && button.innerHTML.trim() === ' ') {{
                         // استبدال محتوى الزر بالـ HTML المخصص
-                        button.innerHTML = "{button_html.replace(/"/g, '\\"')}";
+                        button.innerHTML = "{escaped_html}";
                         // إضافة كلاسات للـ CSS لتنسيق الزر نفسه (موجودة في styles.py)
                         button.classList.add('more-page-button'); 
                     }}
