@@ -1,38 +1,32 @@
 import streamlit as st
 from datetime import date
-# تأكد من أن هذه الاستيرادات صحيحة بناءً على هيكل ملفاتك
-from database.crud import crud 
-from database.models import db 
-from styles import load_custom_css # استيراد دالة CSS فقط
+from database.crud import crud
+from database.models import db
+from styles import load_custom_css # استيراد دالة CSS
 from components.notifications import NotificationCenter
 
-# استيراد الصفحات الأساسية
+# استيراد الصفحات
 import dashboard
 import appointments
 import patients
+import doctors
 import treatments
 import payments
 import inventory
-# استيراد ملف صفحة 'المزيد'
-import more_pages 
-
-# استيراد الصفحات الأخرى (لاستخدامها في التوجيه)
-import doctors
 import suppliers
 import expenses
 import reports
 import settings
 import activity_log
 
-
-# =========================
+# =======================
 # تهيئة التطبيق
-# =========================
+# =======================
 st.set_page_config(
-    page_title="Cura Clinic - نظام إدارة العيادة",
+    page_title="نظام إدارة العيادة - Cura Clinic",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="collapsed" 
+    initial_sidebar_state="expanded" # Keep expanded for desktop, becomes menu on mobile
 )
 
 @st.cache_resource
@@ -43,142 +37,131 @@ def init_db():
 
 init_db()
 
-# تطبيق الـ CSS المخصص لتفعيل الشريط السفلي وتنسيق الأزرار
+# تطبيق الـ CSS المخصص
 load_custom_css()
 
 # ==================================================================================
-# الشريط السفلي - التنقل (Mobile Navigation Bar)
+# هيكل الشريط الجانبي - التنقل المنظم
 # ==================================================================================
 
-# قائمة الصفحات الأساسية للتنقل السفلي (باستخدام رموز الأيموجي/FontAwesome لسهولة الدمج)
-# التنسيق: أيقونة HTML (مثل FontAwesome) متبوعة بالنص
-BOTTOM_NAV_PAGES = [
-    {'id': 'dashboard', 'label': 'الرئيسية', 'icon': '🏠'},
-    {'id': 'appointments', 'label': 'المواعيد', 'icon': '📅'},
-    {'id': 'patients', 'label': 'المرضى', 'icon': '🧑'}, # نستخدم رمز شخص واحد
-    {'id': 'payments', 'label': 'المالية', 'icon': '💵'},
-    {'id': 'inventory', 'label': 'المخزون', 'icon': '📦'},
-    {'id': 'more_pages', 'label': 'المزيد', 'icon': '☰'}
+SIDEBAR_GROUPS = [
+    {
+        'title': 'العمليات الأساسية',
+        'pages': [
+            {'id': 'dashboard', 'label': 'لوحة القيادة', 'icon': '🏠'},
+            {'id': 'appointments', 'label': 'إدارة المواعيد', 'icon': '📅'},
+            {'id': 'patients', 'label': 'ملفات المرضى', 'icon': '🧑‍🤝‍🧑'},
+            {'id': 'treatments', 'label': 'العلاجات والخدمات', 'icon': '⚕️'},
+        ]
+    },
+    {
+        'title': 'الإدارة والمالية',
+        'pages': [
+            {'id': 'payments', 'label': 'المعاملات المالية', 'icon': '💵'},
+            {'id': 'expenses', 'label': 'المصروفات', 'icon': '🧾'},
+            {'id': 'inventory', 'label': 'إدارة المخزون', 'icon': '📦'},
+            {'id': 'suppliers', 'label': 'إدارة الموردين', 'icon': '🚚'},
+            {'id': 'doctors', 'label': 'إدارة الأطباء', 'icon': '👨‍⚕️'},
+        ]
+    },
+    {
+        'title': 'النظام والتقارير',
+        'pages': [
+            {'id': 'reports', 'label': 'التقارير والإحصاء', 'icon': '📊'},
+            {'id': 'activity_log', 'label': 'سجل الأنشطة', 'icon': '⏱️'},
+            {'id': 'settings', 'label': 'إعدادات النظام', 'icon': '⚙️'},
+        ]
+    },
 ]
 
-def render_top_stats_bar():
-    """يعرض شريط إحصائيات علوي مرن يناسب الهاتف."""
-    try:
-        stats = crud.get_dashboard_stats()
-    except Exception:
-        # fallback
-        stats = {'today_appointments': 0, 'low_stock_items': 0}
-    
-    st.markdown("<div class='top-stats-bar'>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    
-    # 1. مواعيد اليوم
-    with col1:
-        st.markdown(f"<div class='stat-card stat-success'>📅 مواعيد: {stats['today_appointments']}</div>", unsafe_allow_html=True)
-
-    # 2. المخزون المنخفض
-    with col2:
-        if stats['low_stock_items'] > 0:
-            st.markdown(f"<div class='stat-card stat-warning'>⚠️ مخزون: {stats['low_stock_items']}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div class='stat-card stat-info'>✅ المخزون جيد</div>", unsafe_allow_html=True)
-
-    # 3. المصروفات الشهرية
-    try:
-        financial_summary = crud.get_financial_summary()
-        monthly_expenses = financial_summary.get('current_month_expenses', financial_summary.get('total_expenses', 0))
-    except:
-        monthly_expenses = 0 
-        
-    with col3:
-        # يتم تقريب الرقم لأقرب عدد صحيح للعرض في المساحة الصغيرة
-        st.markdown(f"<div class='stat-card stat-error'>💰 المصروفات: {monthly_expenses:.0f}</div>", unsafe_allow_html=True)
-        
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-def handle_nav_click(page_id):
-    """دالة Python لمعالجة تغيير الصفحة"""
-    st.session_state.current_page = page_id
-    st.rerun()
-
-def render_bottom_nav():
-    """
-    يرسم شريط التنقل السفلي الثابت باستخدام st.button بشكل مباشر
-    مما يضمن استجابة النقر.
-    """
+def render_sidebar():
+    """يرسم شريط التنقل الجانبي المنظم."""
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
         
     current_page = st.session_state.current_page
-    
-    st.markdown("<div class='mobile-nav-container'>", unsafe_allow_html=True)
-    
-    # استخدام st.columns لتقسيم المساحة
-    cols = st.columns(len(BOTTOM_NAV_PAGES))
-    
-    for idx, page in enumerate(BOTTOM_NAV_PAGES):
-        # بناء الـ label كـ HTML (أيقونة + سطر جديد + نص)
-        # Streamlit سيحول هذا النص إلى HTML (نظرياً) لكنه سيظهر النص فقط.
-        # لذا سنستخدم تنسيق Markdown بسيط:
-        button_label = f"<div class='nav-label-content'><span class='nav-icon'>{page['icon']}</span><p>{page['label']}</p></div>"
+
+    with st.sidebar:
+        # رأس الشريط الجانبي
+        st.markdown("""
+            <div style='text-align: center; padding: 10px 0;'>
+                <h1 style='color: #3498db; margin: 0; font-size: 28px;'>🏥 Cura Clinic</h1>
+                <p style='color: #95a5a6; margin: 5px 0;'>نظام إدارة العيادة</p>
+            </div>
+        """, unsafe_allow_html=True)
+        st.markdown("---")
         
-        with cols[idx]:
-            
-            # 1. استخدام st.button بشكل مباشر
-            # لا يمكننا تمرير HTML كـ label، لذا نستخدم HTML لتنسيقه لاحقاً
-            clicked = st.button(
-                label=f"{page['icon']}\n{page['label']}",
-                key=f"nav_btn_{page['id']}",
-                use_container_width=True
-            )
-            
-            if clicked:
-                handle_nav_click(page['id'])
+        # التنقل (Navigation)
+        for group in SIDEBAR_GROUPS:
+            st.subheader(group['title'])
+            for page in group['pages']:
+                
+                # بناء اسم الزر (أيقونة + نص)
+                button_label = f"{page['icon']}  {page['label']}"
+                
+                # استخدام st.button للتحكم في التنقل
+                # Streamlit يقوم تلقائياً بتمييز الزر الذي تم النقر عليه
+                if st.button(
+                    button_label, 
+                    key=f"nav_{page['id']}", 
+                    use_container_width=True
+                ):
+                    st.session_state.current_page = page['id']
+                    st.rerun()
 
-            # 2. حقن CSS مخصص لتلوين الزر النشط في هذا الإطار فقط
-            if page['id'] == current_page:
-                st.markdown(f"""
-                    <style>
-                        /* استهداف الزر النشط بواسطة مفتاحه الفريد */
-                        button[key="nav_btn_{page['id']}"] {{
-                            color: #3498db !important; /* لون نشط (أزرق طبي) */
-                            font-weight: bold !important;
-                        }}
-                        button[key="nav_btn_{page['id']}"] p {{
-                            font-weight: bold !important;
-                        }}
-                    </style>
-                """, unsafe_allow_html=True)
+                # حقن CSS بسيط لتمييز الزر النشط باللون
+                if page['id'] == current_page:
+                    st.markdown(f"""
+                        <style>
+                            /* استهداف الزر النشط في الشريط الجانبي فقط */
+                            [data-testid="stSidebar"] button[key="nav_{page['id']}"] {{
+                                background-color: #3498db !important; 
+                                color: white !important;
+                                border-color: #3498db !important;
+                                font-weight: bold;
+                            }}
+                        </style>
+                    """, unsafe_allow_html=True)
+            st.markdown("---")
+        
+        # معلومات سريعة في الشريط الجانبي
+        st.markdown("<h4 style='color: #34495e;'>معلومات سريعة</h4>", unsafe_allow_html=True)
+        try:
+            stats = crud.get_dashboard_stats()
+        except:
+            stats = {'today_appointments': 0, 'low_stock_items': 0}
             
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    NotificationCenter.show_urgent_toast_notifications()
+        st.info(f"📅 اليوم: {date.today().strftime('%Y-%m-%d')}")
+        st.success(f"📌 مواعيد اليوم: {stats['today_appointments']}")
+        
+        if stats['low_stock_items'] > 0:
+            st.warning(f"⚠️ مخزون منخفض: {stats['low_stock_items']} عنصر")
+        else:
+            st.success("✅ المخزون جيد")
+            
+        # إشعارات
+        NotificationCenter.render()
 
-
-# =========================
+# =======================
 # التوجيه إلى الصفحات
-# =========================
+# =======================
 def main():
     
-    # عرض شريط الإحصائيات العلوي
-    render_top_stats_bar()
+    # 1. عرض الشريط الجانبي
+    render_sidebar()
     
-    # عرض شريط التنقل السفلي
-    render_bottom_nav() 
-    
-    # خريطة التوجيه بين الـ ID والدالة المسؤولة عن عرض الصفحة
+    # 2. عرض إشعارات Toast (لأنها لا تحتاج إلى إعادة تحميل)
+    NotificationCenter.show_urgent_toast_notifications()
+
+    # 3. خريطة التوجيه وعرض الصفحة المطلوبة
     page_mapping = {
         'dashboard': dashboard.render,
         'appointments': appointments.render,
         'patients': patients.render,
-        'payments': payments.render,
-        'inventory': inventory.render,
-        'more_pages': more_pages.render, # استخدام الملف الجديد لعرض المزيد من الخيارات
-        
-        # وحدات النظام التي يمكن الوصول إليها من صفحة 'المزيد'
         'doctors': doctors.render,
         'treatments': treatments.render,
+        'payments': payments.render,
+        'inventory': inventory.render,
         'suppliers': suppliers.render,
         'expenses': expenses.render,
         'reports': reports.render,
@@ -187,6 +170,8 @@ def main():
     }
     
     page = st.session_state.get('current_page', 'dashboard')
+    
+    st.title(f"{page_mapping[page].__module__.split('.')[-1].capitalize()}") # عنوان الصفحة ديناميكياً
     
     if page in page_mapping:
         # عرض محتوى الصفحة المختارة
