@@ -62,7 +62,7 @@ BOTTOM_NAV_PAGES = [
 ]
 
 def render_top_stats_bar():
-    """يعرض شريط إحصائيات علوي مرن يناسب الهاتف."""
+    # منطق شريط الإحصائيات (لم يتغير)
     try:
         stats = crud.get_dashboard_stats()
     except Exception:
@@ -97,10 +97,15 @@ def render_top_stats_bar():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
+def handle_nav_click(page_id):
+    """دالة Python لمعالجة تغيير الصفحة"""
+    st.session_state.current_page = page_id
+    st.rerun()
+
 def render_bottom_nav():
     """
-    يرسم شريط التنقل السفلي الثابت باستخدام st.markdown و JavaScript
-    لضمان ظهور الأيقونات والنصوص بشكل موثوق.
+    يرسم شريط التنقل السفلي الثابت باستخدام حيلة st.button الشفاف
+    لضمان استجابة النقر.
     """
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
@@ -117,34 +122,80 @@ def render_bottom_nav():
             is_active = current_page == page['id']
             page_id = page['id']
 
-            # بناء الزر كـ HTML قابل للنقر مع محفز JavaScript لتحديث حالة الجلسة
-            button_html = f"""
-            <div 
-                class='nav-button-content {"active" if is_active else ""}' 
-                id='nav-btn-{page_id}' 
-                onclick="
-                    // استخدام postMessage لتحديث حالة الجلسة وتسبب في إعادة التشغيل
-                    window.parent.postMessage(
-                        {{
-                            type: 'streamlit:setSessionState', 
-                            key: 'current_page', 
-                            value: '{page_id}' 
-                        }}, 
-                        '*'
-                    );
-                "
-            >
+            # 1. عرض الـ HTML المنسق (الأيقونة والنص)
+            content_html = f"""
+            <div class='nav-button-content {"active" if is_active else ""}' id='nav-content-{page_id}'>
                 <div class='nav-icon'>{page['icon_data']}</div>
                 <div class='nav-label'>{page['label']}</div>
             </div>
             """
+            st.markdown(content_html, unsafe_allow_html=True)
+
+            # 2. وضع زر Streamlit حقيقي وشفاف فوق الـ HTML المنسق لضمان الاستجابة
+            # نستخدم st.form لضمان أن النقر على زر Streamlit سيعمل بسلاسة
+            with st.form(key=f"nav_form_{page_id}", clear_on_submit=False):
+                # زر Streamlit شفاف وحقيقي، يغطي منطقة الـ HTML المنسق
+                submitted = st.form_submit_button(
+                    label=" ", # مسافة فارغة لجعل الزر شفافاً قدر الإمكان
+                    use_container_width=True,
+                    # نستخدم key فريد في كل مرة لضمان عدم وجود تكرار
+                    key=f"nav_btn_{page_id}_submit"
+                )
+                
+                if submitted:
+                    handle_nav_click(page_id)
             
-            # عرض HTML بدلاً من st.button
-            st.markdown(
-                button_html,
-                unsafe_allow_html=True
-            )
-            
+            # حقن CSS إضافي لجعل الزر الشفاف يغطي الـ HTML بشكل مثالي ويصبح غير مرئي
+            st.markdown(f"""
+                <style>
+                    /* استهداف الحاوية الرئيسية للزر (النموذج) */
+                    div[data-testid="stForm"] > div:has(button[key="nav_btn_{page_id}_submit"]) {{
+                        position: absolute; /* وضعه بشكل مطلق لتغطية المحتوى المنسق */
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        height: 100%;
+                        width: 100%;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }}
+                    /* جعل الزر نفسه شفافاً */
+                    button[key="nav_btn_{page_id}_submit"] {{
+                        background: transparent !important;
+                        color: transparent !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        height: 100%;
+                        width: 100%;
+                        margin: 0;
+                        padding: 0;
+                        z-index: 1001; /* فوق المحتوى المنسق */
+                        cursor: pointer;
+                    }}
+                    /* إخفاء تسمية النموذج */
+                    div[data-testid="stForm"] > div > div > label {{
+                        display: none !important;
+                    }}
+                    
+                    /* إعادة ترتيب الأعمدة لتكون حاوية للـ DIVs والأزرار */
+                    .stApp .stColumn {{
+                        position: relative; /* لتمكين وضع الزر بشكل مطلق داخل العمود */
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                    }}
+                    
+                    /* لضمان أن الـ HTML المنسق يأخذ وضع نسبي ليتمكن الزر المطلق من تغطيته */
+                    #nav-content-{page_id} {{
+                         position: relative;
+                         z-index: 1000;
+                    }}
+
+                </style>
+                """, unsafe_allow_html=True)
+
     st.markdown("</div>", unsafe_allow_html=True)
     
     NotificationCenter.show_urgent_toast_notifications()
