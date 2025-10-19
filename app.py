@@ -2,10 +2,11 @@ import streamlit as st
 from datetime import date
 from database.crud import crud
 from database.models import db
-from styles import load_custom_css # استيراد دالة CSS
+from styles import load_custom_css
 from components.notifications import NotificationCenter
 
 # استيراد الصفحات
+
 import dashboard
 import appointments
 import patients
@@ -19,167 +20,269 @@ import reports
 import settings
 import activity_log
 
-# =======================
+# ========================
+
 # تهيئة التطبيق
-# =======================
+
+# ========================
+
 st.set_page_config(
-    page_title="نظام إدارة العيادة - Cura Clinic",
-    page_icon="🏥",
-    layout="wide",
-    initial_sidebar_state="expanded" # Keep expanded for desktop, becomes menu on mobile
+page_title=“Cura Clinic | نظام إدارة العيادة”,
+page_icon=“🏥”,
+layout=“wide”,
+initial_sidebar_state=“auto”  # تلقائي للتكيف مع حجم الشاشة
 )
 
 @st.cache_resource
 def init_db():
-    # تهيئة قاعدة البيانات مرة واحدة
-    db.initialize()
-    return True
+db.initialize()
+return True
 
 init_db()
 
-# تطبيق الـ CSS المخصص
-load_custom_css()
+# ========================
 
-# ==================================================================================
-# هيكل الشريط الجانبي - التنقل المنظم
-# ==================================================================================
+# القائمة العلوية للموبايل
 
-SIDEBAR_GROUPS = [
-    {
-        'title': 'العمليات الأساسية',
-        'pages': [
-            {'id': 'dashboard', 'label': 'لوحة القيادة', 'icon': '🏠'},
-            {'id': 'appointments', 'label': 'إدارة المواعيد', 'icon': '📅'},
-            {'id': 'patients', 'label': 'ملفات المرضى', 'icon': '🧑‍🤝‍🧑'},
-            {'id': 'treatments', 'label': 'العلاجات والخدمات', 'icon': '⚕️'},
-        ]
-    },
-    {
-        'title': 'الإدارة والمالية',
-        'pages': [
-            {'id': 'payments', 'label': 'المعاملات المالية', 'icon': '💵'},
-            {'id': 'expenses', 'label': 'المصروفات', 'icon': '🧾'},
-            {'id': 'inventory', 'label': 'إدارة المخزون', 'icon': '📦'},
-            {'id': 'suppliers', 'label': 'إدارة الموردين', 'icon': '🚚'},
-            {'id': 'doctors', 'label': 'إدارة الأطباء', 'icon': '👨‍⚕️'},
-        ]
-    },
-    {
-        'title': 'النظام والتقارير',
-        'pages': [
-            {'id': 'reports', 'label': 'التقارير والإحصاء', 'icon': '📊'},
-            {'id': 'activity_log', 'label': 'سجل الأنشطة', 'icon': '⏱️'},
-            {'id': 'settings', 'label': 'إعدادات النظام', 'icon': '⚙️'},
-        ]
-    },
-]
+# ========================
+
+def render_mobile_header():
+“”“عرض هيدر مخصص للموبايل”””
+col1, col2, col3 = st.columns([1, 3, 1])
+
+```
+with col1:
+    if st.button("☰", key="mobile_menu", help="القائمة"):
+        st.session_state.show_mobile_menu = not st.session_state.get('show_mobile_menu', False)
+
+with col2:
+    st.markdown("""
+        <div style='text-align: center;'>
+            <h2 style='margin: 0; color: var(--primary-color);'>🏥 Cura Clinic</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    # إشعارات سريعة
+    stats = crud.get_dashboard_stats()
+    notification_count = stats.get('low_stock_items', 0) + stats.get('expiring_items', 0)
+    if notification_count > 0:
+        st.button(f"🔔 {notification_count}", key="notifications_btn")
+```
+
+# ========================
+
+# الشريط الجانبي المحسّن
+
+# ========================
 
 def render_sidebar():
-    """يرسم شريط التنقل الجانبي المنظم."""
+with st.sidebar:
+# رأس العيادة
+st.markdown(”””
+<div style='text-align: center; padding: 1.5rem 0.5rem; background: linear-gradient(135deg, var(--primary-color)20, var(--primary-color)10); border-radius: 12px; margin-bottom: 1rem;'>
+<div style='font-size: 3rem; margin-bottom: 0.5rem;'>🏥</div>
+<h2 style='color: var(--primary-color); margin: 0; font-size: 1.5rem;'>Cura Clinic</h2>
+<p style='color: #6b7280; margin: 0.3rem 0 0 0; font-size: 0.9rem;'>نظام إدارة العيادة</p>
+</div>
+“””, unsafe_allow_html=True)
+
+```
+    # اختيار الثيم في expander
+    with st.expander("🎨 تخصيص المظهر", expanded=False):
+        theme_map = {
+            "💜 بنفسجي": "purple",
+            "💙 أزرق": "blue",
+            "💚 أخضر": "green",
+            "🧡 برتقالي": "orange",
+            "🖤 داكن": "dark",
+            "💗 وردي": "pink"
+        }
+        theme_choice = st.selectbox("اختر الثيم", list(theme_map.keys()), key="theme_select", label_visibility="collapsed")
+        load_custom_css(theme=theme_map[theme_choice])
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # القائمة الرئيسية مع أيقونات محسّنة
+    menu_sections = {
+        "رئيسية": [
+            ("🏠", "الرئيسية", "dashboard"),
+            ("📅", "المواعيد", "appointments"),
+        ],
+        "إدارة": [
+            ("👥", "المرضى", "patients"),
+            ("👨‍⚕️", "الأطباء", "doctors"),
+            ("💉", "العلاجات", "treatments"),
+        ],
+        "مالية": [
+            ("💰", "المدفوعات", "payments"),
+            ("💸", "المصروفات", "expenses"),
+        ],
+        "مخزون": [
+            ("📦", "المخزون", "inventory"),
+            ("🏪", "الموردين", "suppliers"),
+        ],
+        "أخرى": [
+            ("📊", "التقارير", "reports"),
+            ("⚙️", "الإعدادات", "settings"),
+            ("📝", "سجل الأنشطة", "activity_log"),
+        ]
+    }
+
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
-        
-    current_page = st.session_state.current_page
 
-    with st.sidebar:
-        # رأس الشريط الجانبي
-        st.markdown("""
-            <div style='text-align: center; padding: 10px 0;'>
-                <h1 style='color: #3498db; margin: 0; font-size: 28px;'>🏥 Cura Clinic</h1>
-                <p style='color: #95a5a6; margin: 5px 0;'>نظام إدارة العيادة</p>
+    for section, items in menu_sections.items():
+        st.markdown(f"**{section}**")
+        for icon, label, page_id in items:
+            is_active = st.session_state.current_page == page_id
+            button_style = "primary" if is_active else "secondary"
+            
+            if st.button(
+                f"{icon} {label}",
+                key=f"nav_{page_id}",
+                use_container_width=True,
+                type=button_style
+            ):
+                st.session_state.current_page = page_id
+                st.rerun()
+        st.markdown("<div style='margin: 0.5rem 0;'></div>", unsafe_allow_html=True)
+
+    # معلومات سريعة
+    st.markdown("---")
+    with st.container():
+        stats = crud.get_dashboard_stats()
+        
+        st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;'>
+                <div style='font-size: 0.85rem; color: #0369a1;'>📅 التاريخ</div>
+                <div style='font-size: 1rem; font-weight: bold; color: #075985;'>{date.today().strftime('%Y-%m-%d')}</div>
             </div>
         """, unsafe_allow_html=True)
-        st.markdown("---")
         
-        # التنقل (Navigation)
-        for group in SIDEBAR_GROUPS:
-            st.subheader(group['title'])
-            for page in group['pages']:
-                
-                # بناء اسم الزر (أيقونة + نص)
-                button_label = f"{page['icon']}  {page['label']}"
-                
-                # استخدام st.button للتحكم في التنقل
-                # Streamlit يقوم تلقائياً بتمييز الزر الذي تم النقر عليه
-                if st.button(
-                    button_label, 
-                    key=f"nav_{page['id']}", 
-                    use_container_width=True
-                ):
-                    st.session_state.current_page = page['id']
-                    st.rerun()
-
-                # حقن CSS بسيط لتمييز الزر النشط باللون
-                if page['id'] == current_page:
-                    st.markdown(f"""
-                        <style>
-                            /* استهداف الزر النشط في الشريط الجانبي فقط */
-                            [data-testid="stSidebar"] button[key="nav_{page['id']}"] {{
-                                background-color: #3498db !important; 
-                                color: white !important;
-                                border-color: #3498db !important;
-                                font-weight: bold;
-                            }}
-                        </style>
-                    """, unsafe_allow_html=True)
-            st.markdown("---")
-        
-        # معلومات سريعة في الشريط الجانبي
-        st.markdown("<h4 style='color: #34495e;'>معلومات سريعة</h4>", unsafe_allow_html=True)
-        try:
-            stats = crud.get_dashboard_stats()
-        except:
-            stats = {'today_appointments': 0, 'low_stock_items': 0}
-            
-        st.info(f"📅 اليوم: {date.today().strftime('%Y-%m-%d')}")
-        st.success(f"📌 مواعيد اليوم: {stats['today_appointments']}")
+        st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #f0fdf4, #dcfce7); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;'>
+                <div style='font-size: 0.85rem; color: #15803d;'>📌 مواعيد اليوم</div>
+                <div style='font-size: 1.5rem; font-weight: bold; color: #166534;'>{stats['today_appointments']}</div>
+            </div>
+        """, unsafe_allow_html=True)
         
         if stats['low_stock_items'] > 0:
-            st.warning(f"⚠️ مخزون منخفض: {stats['low_stock_items']} عنصر")
-        else:
-            st.success("✅ المخزون جيد")
-            
-        # إشعارات
+            st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #fffbeb, #fef3c7); padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;'>
+                    <div style='font-size: 0.85rem; color: #a16207;'>⚠️ مخزون منخفض</div>
+                    <div style='font-size: 1.3rem; font-weight: bold; color: #ca8a04;'>{stats['low_stock_items']} عنصر</div>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        if stats['expiring_items'] > 0:
+            st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #fef2f2, #fee2e2); padding: 1rem; border-radius: 8px;'>
+                    <div style='font-size: 0.85rem; color: #991b1b;'>🚨 تنتهي قريباً</div>
+                    <div style='font-size: 1.3rem; font-weight: bold; color: #dc2626;'>{stats['expiring_items']} صنف</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    # إشعارات
+    st.markdown("---")
+    with st.expander("🔔 الإشعارات", expanded=False):
         NotificationCenter.render()
+```
 
-# =======================
+# ========================
+
+# عرض القائمة للموبايل
+
+# ========================
+
+def render_mobile_menu():
+“”“عرض قائمة منبثقة للموبايل”””
+if st.session_state.get(‘show_mobile_menu’, False):
+with st.container():
+st.markdown(”””
+<div style='background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem;'>
+“””, unsafe_allow_html=True)
+
+```
+        menu_items = {
+            "🏠 الرئيسية": "dashboard",
+            "📅 المواعيد": "appointments",
+            "👥 المرضى": "patients",
+            "👨‍⚕️ الأطباء": "doctors",
+            "💉 العلاجات": "treatments",
+            "💰 المدفوعات": "payments",
+            "📦 المخزون": "inventory",
+            "🏪 الموردين": "suppliers",
+            "💸 المصروفات": "expenses",
+            "📊 التقارير": "reports",
+            "⚙️ الإعدادات": "settings",
+            "📝 سجل الأنشطة": "activity_log"
+        }
+        
+        cols = st.columns(3)
+        for idx, (label, page_id) in enumerate(menu_items.items()):
+            with cols[idx % 3]:
+                if st.button(label, key=f"mobile_nav_{page_id}", use_container_width=True):
+                    st.session_state.current_page = page_id
+                    st.session_state.show_mobile_menu = False
+                    st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+```
+
+# ========================
+
 # التوجيه إلى الصفحات
-# =======================
+
+# ========================
+
 def main():
-    
-    # 1. عرض الشريط الجانبي
-    render_sidebar()
-    
-    # 2. عرض إشعارات Toast (لأنها لا تحتاج إلى إعادة تحميل)
-    NotificationCenter.show_urgent_toast_notifications()
+# تحميل الأنماط أولاً
+theme_map = {
+“💜 بنفسجي”: “purple”,
+“💙 أزرق”: “blue”,
+“💚 أخضر”: “green”,
+“🧡 برتقالي”: “orange”,
+“🖤 داكن”: “dark”,
+“💗 وردي”: “pink”
+}
+current_theme = st.session_state.get(‘theme_select’, “💙 أزرق”)
+load_custom_css(theme=theme_map.get(current_theme, “blue”))
 
-    # 3. خريطة التوجيه وعرض الصفحة المطلوبة
-    page_mapping = {
-        'dashboard': dashboard.render,
-        'appointments': appointments.render,
-        'patients': patients.render,
-        'doctors': doctors.render,
-        'treatments': treatments.render,
-        'payments': payments.render,
-        'inventory': inventory.render,
-        'suppliers': suppliers.render,
-        'expenses': expenses.render,
-        'reports': reports.render,
-        'settings': settings.render,
-        'activity_log': activity_log.render
-    }
-    
-    page = st.session_state.get('current_page', 'dashboard')
-    
-    st.title(f"{page_mapping[page].__module__.split('.')[-1].capitalize()}") # عنوان الصفحة ديناميكياً
-    
-    if page in page_mapping:
-        # عرض محتوى الصفحة المختارة
-        page_mapping[page]()
-    else:
-        # عرض لوحة القيادة كافتراض
-        dashboard.render()
+```
+# عرض الشريط الجانبي
+render_sidebar()
 
-if __name__ == '__main__':
-    main()
+# عرض القائمة للموبايل إذا كانت مفتوحة
+if st.session_state.get('show_mobile_menu', False):
+    render_mobile_menu()
 
+# عرض الإشعارات العاجلة
+NotificationCenter.show_urgent_toast_notifications()
+
+# توجيه الصفحات
+page_mapping = {
+    'dashboard': dashboard.render,
+    'appointments': appointments.render,
+    'patients': patients.render,
+    'doctors': doctors.render,
+    'treatments': treatments.render,
+    'payments': payments.render,
+    'inventory': inventory.render,
+    'suppliers': suppliers.render,
+    'expenses': expenses.render,
+    'reports': reports.render,
+    'settings': settings.render,
+    'activity_log': activity_log.render
+}
+
+page = st.session_state.get('current_page', 'dashboard')
+render_func = page_mapping.get(page, dashboard.render)
+
+# عرض الصفحة مع padding مناسب
+with st.container():
+    render_func()
+```
+
+if **name** == “**main**”:
+main()
