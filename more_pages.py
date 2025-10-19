@@ -30,23 +30,34 @@ def render():
                 page = MORE_PAGES[idx]
                 with cols[j]:
                     
-                    # استخدام Markdown مع كود HTML/CSS لإنشاء الزر الكبير والمُنسَّق
+                    # HTML المحتوى البصري للزر
                     button_html = f"""
-                    <div class='more-page-button' onclick="document.querySelector('#btn_{page['id']}').click()">
+                    <div class='more-page-button-content'>
                         <div class='icon-svg'>{page['icon_data']}</div>
                         <div class='label'>{page['label']}</div>
                     </div>
                     """
-                    st.markdown(button_html, unsafe_allow_html=True)
-
-                    # زر Streamlit مخفي لتغيير حالة التنقل عند النقر على الـ HTML
+                    
+                    # 1. عرض زر Streamlit (سيظهر فارغاً مبدئياً)
                     if st.button(
-                        "اختيار", 
-                        key=f"btn_{page['id']}", 
+                        label=" ", # مسافة كاسم للزر
+                        key=f"more_nav_{page['id']}", 
                         use_container_width=True
                     ):
                         st.session_state.current_page = page['id']
                         st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+                    # 2. حقن المحتوى البصري داخل الزر باستخدام JavaScript
+                    js_injection = f"""
+                    <script>
+                    const button = document.querySelector('[data-testid="stButton"] button[key="more_nav_{page['id']}"]');
+                    if (button && button.innerHTML.trim() === ' ') {{
+                        // استبدال محتوى الزر بالـ HTML المخصص
+                        button.innerHTML = "{button_html.replace(/"/g, '\\"')}";
+                        // إضافة كلاسات للـ CSS لتنسيق الزر نفسه (موجودة في styles.py)
+                        button.classList.add('more-page-button'); 
+                    }}
+                    </script>
+                    """
+                    st.markdown(js_injection, unsafe_allow_html=True)
 
