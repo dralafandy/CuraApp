@@ -82,20 +82,21 @@ def render_top_stats_bar():
 
     # 3. المصروفات الشهرية
     try:
-        # افتراض أن هذه الدالة موجودة في crud.py وتعمل
         financial_summary = crud.get_financial_summary()
+        # نستخدم مفتاح مختلف إذا تم تحديث crud
         monthly_expenses = financial_summary.get('current_month_expenses', financial_summary.get('total_expenses', 0))
     except:
         monthly_expenses = 0 
         
     with col3:
+        # يتم تقريب الرقم لأقرب عدد صحيح للعرض في المساحة الصغيرة
         st.markdown(f"<div class='stat-card stat-error'>💰 المصروفات: {monthly_expenses:.0f}</div>", unsafe_allow_html=True)
         
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_bottom_nav():
-    """يرسم شريط التنقل السفلي الثابت بأيقونات Lucide."""
+    """يرسم شريط التنقل السفلي الثابت بأيقونات Lucide باستخدام حقن JS لتجاوز Streamlit."""
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'dashboard'
         
@@ -109,22 +110,42 @@ def render_bottom_nav():
         with cols[idx]:
             is_active = current_page == page['id']
             
-            # محتوى الزر (الأيقونة والنص) - نستخدم HTML هنا لتطبيق الـ CSS بشكل دقيق
+            # HTML المحتوى البصري للزر (الأيقونة والنص)
             button_html = f"""
-            <div class='nav-button-content {"active" if is_active else ""}' style='text-align: center; line-height: 1.1;'>
+            <div class='nav-button-content {"active" if is_active else ""}' id='nav_content_{page['id']}'>
                 <div class='nav-icon'>{page['icon_data']}</div>
                 <div class='nav-label'>{page['label']}</div>
             </div>
             """
-            
-            # استخدام زر Streamlit عادي لتغيير st.session_state
+
+            # 1. عرض زر Streamlit ليعمل كمنطقة قابلة للنقر
             if st.button(
-                label=button_html,
+                label=" ", # مسافة كاسم للزر لكي يتمكن JS من التعرف عليه واستبداله
                 key=f"nav_bottom_{page['id']}",
                 use_container_width=True
             ):
                  st.session_state.current_page = page['id']
                  st.rerun()
+            
+            # 2. حقن المحتوى البصري داخل الزر باستخدام JavaScript
+            js_injection = f"""
+            <script>
+            // نستخدم key الزر لتحديد مكانه بدقة
+            const button = document.querySelector('[data-testid="stButton"] button[key="nav_bottom_{page['id']}"]');
+            if (button && button.innerHTML.trim() === ' ') {{
+                // استبدال محتوى الزر بالـ HTML المخصص
+                button.innerHTML = "{button_html.replace(/"/g, '\\"')}";
+                
+                // إضافة كلاسات للـ CSS لتنسيق الزر نفسه
+                button.classList.add('custom-nav-button'); 
+                if ({'true' if is_active else 'false'}) {{
+                    button.classList.add('active');
+                }}
+            }}
+            </script>
+            """
+            st.markdown(js_injection, unsafe_allow_html=True)
+            
 
     st.markdown("</div>", unsafe_allow_html=True)
     
@@ -143,6 +164,7 @@ def main():
     render_bottom_nav() 
     
     # خريطة التوجيه بين الـ ID والدالة المسؤولة عن عرض الصفحة
+    # يجب أن تكون كل وحدة مستوردة مسبقاً في بداية الملف
     page_mapping = {
         'dashboard': dashboard.render,
         'appointments': appointments.render,
