@@ -60,6 +60,14 @@ def load_custom_css():
             line-height: 1.1;
             padding: 5px 0; 
             cursor: pointer; /* ضروري لجعله يبدو قابلاً للنقر */
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.1s;
+        }
+        
+        /* تأثير النقر للهواتف */
+        .nav-button-content:active {
+            transform: scale(0.95);
         }
 
         /* تنسيق الأيقونة (يتم تطبيقها على عنصر SVG مباشرة) */
@@ -115,8 +123,7 @@ def load_custom_css():
         .stat-info { background-color: #f9f9f9; color: #595959; border: 1px solid #d9d9d9; } 
         
         /* ======================================= */
-        /* 4. تنسيق شاشة 'المزيد' (More Pages) */
-        /* تم نقل تنسيقات النقر (more-page-button) إلى ملف more_pages.py */
+        /* 4. تنسيق شاشة 'المزيد' (More Pages) - تم نقل تنسيقات النقر إلى more_pages.py */
         /* ======================================= */
         .more-pages-grid {
             display: grid;
@@ -125,7 +132,6 @@ def load_custom_css():
             margin-top: 20px;
         }
         
-        /* تنسيق المحتوى داخل زر More Pages */
         .more-page-button-content {
             text-align: center;
             display: flex;
