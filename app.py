@@ -64,7 +64,12 @@ BOTTOM_NAV_PAGES = [
 
 def render_top_stats_bar():
     """يعرض شريط إحصائيات علوي مرن يناسب الهاتف."""
-    stats = crud.get_dashboard_stats()
+    # يجب التأكد من أن دالة crud.get_dashboard_stats() موجودة وتعمل بشكل صحيح
+    try:
+        stats = crud.get_dashboard_stats()
+    except Exception as e:
+        st.error(f"خطأ في تحميل الإحصائيات: {e}")
+        stats = {'today_appointments': 0, 'low_stock_items': 0}
     
     st.markdown("<div class='top-stats-bar'>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
@@ -111,13 +116,14 @@ def render_bottom_nav():
             is_active = current_page == page['id']
             
             # HTML المحتوى البصري للزر (الأيقونة والنص)
+            # تم إضافة id فريد لتسهيل العثور عليه بواسطة JS لاحقًا
             button_html = f"""
             <div class='nav-button-content {"active" if is_active else ""}' id='nav_content_{page['id']}'>
                 <div class='nav-icon'>{page['icon_data']}</div>
                 <div class='nav-label'>{page['label']}</div>
             </div>
             """
-
+            
             # 1. عرض زر Streamlit ليعمل كمنطقة قابلة للنقر
             if st.button(
                 label=" ", # مسافة كاسم للزر لكي يتمكن JS من التعرف عليه واستبداله
@@ -128,13 +134,17 @@ def render_bottom_nav():
                  st.rerun()
             
             # 2. حقن المحتوى البصري داخل الزر باستخدام JavaScript
+            # **تم تصحيح الخطأ هنا عبر استخدام سلسلة نصية عادية بدلاً من f-string للدالة replace**
+            # (نحتاج لنسخة من button_html تكون كل علامات الاقتباس بها مهربّة)
+            escaped_html = button_html.replace('"', '\\"').replace('\n', '')
+            
             js_injection = f"""
             <script>
             // نستخدم key الزر لتحديد مكانه بدقة
             const button = document.querySelector('[data-testid="stButton"] button[key="nav_bottom_{page['id']}"]');
             if (button && button.innerHTML.trim() === ' ') {{
                 // استبدال محتوى الزر بالـ HTML المخصص
-                button.innerHTML = "{button_html.replace(/"/g, '\\"')}";
+                button.innerHTML = "{escaped_html}";
                 
                 // إضافة كلاسات للـ CSS لتنسيق الزر نفسه
                 button.classList.add('custom-nav-button'); 
@@ -164,7 +174,6 @@ def main():
     render_bottom_nav() 
     
     # خريطة التوجيه بين الـ ID والدالة المسؤولة عن عرض الصفحة
-    # يجب أن تكون كل وحدة مستوردة مسبقاً في بداية الملف
     page_mapping = {
         'dashboard': dashboard.render,
         'appointments': appointments.render,
