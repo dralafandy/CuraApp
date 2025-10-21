@@ -10,7 +10,7 @@ from database.models import db
 # صفحة التهيئة الأساسية
 # ========================
 st.set_page_config(
-    page_title="نظام إدارة العيادة - Cura Clinic",
+    page_title="نظام إدارة العيادة - Cura ",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded"
