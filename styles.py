@@ -1,150 +1,219 @@
-# styles.py
 import streamlit as st
 
-def load_custom_css(theme="blue"):
-    """تحميل الأنماط المخصصة حسب الثيم"""
-    
-    themes = {
-        "light": "#ffffff",
-        "dark": "#1a202c",
-        "blue": "#1e40af",
-        "green": "#059669",
-        "red": "#dc2626"
-    }
-    
-    primary_color = themes.get(theme, "#1e40af")
-    secondary_color = "#f3f4f6" if theme == "light" else "#374151"
-    
-    css = f"""
+def load_custom_css():
+    """تحميل الأنماط المخصصة"""
+    st.markdown("""
     <style>
-    /* خلفية الصفحة */
-    .main {{
-        background: {secondary_color};
-        padding: 1rem;
-        border-radius: 12px;
-    }}
-    
-    /* العناوين */
-    h1, h2, h3 {{
-        color: {primary_color};
-        font-family: 'Cairo', sans-serif;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }}
-    
-    /* الأزرار */
-    .stButton>button {{
-        background: {primary_color};
-        color: white;
-        border-radius: 12px;
-        border: none;
-        padding: 0.8rem 1.5rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }}
-    
-    .stButton>button:hover {{
-        background: {primary_color}cc;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }}
-    
-    /* البطاقات */
-    .main-header {{
-        background: {primary_color}10;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        transition: transform 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }}
-    
-    .main-header:hover {{
-        transform: translateY(-4px);
-    }}
-    
-    .main-header h1 {{
-        font-size: 2rem;
-        margin: 0;
-    }}
-    
-    .main-header p {{
-        color: #4b5563;
-        font-size: 1rem;
-        margin: 0.5rem 0 0 0;
-    }}
-    
-    /* الجداول */
-    [data-testid="stDataFrame"] {{
-        border: none;
-        border-radius: 12px;
-        background: {secondary_color};
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }}
-    
-    /* المدخلات */
-    .stTextInput>div>div>input,
-    .stSelectbox>div>div>select,
-    .stTextArea>div>div>textarea {{
-        border-radius: 10px;
-        border: 1px solid {primary_color}40;
-        background: {secondary_color};
-        padding: 0.8rem;
-        transition: border-color 0.3s ease;
-    }}
-    
-    .stTextInput>div>div>input:focus,
-    .stSelectbox>div>div>select:focus,
-    .stTextArea>div>div>textarea:focus {{
-        border-color: {primary_color};
-        box-shadow: 0 0 8px {primary_color}40;
-    }}
-    
-    /* المقاييس */
-    [data-testid="stMetricValue"] {{
-        color: {primary_color};
-        font-size: 1.6rem;
-        font-weight: 600;
-    }}
-    
-    /* التنبيهات */
-    .stAlert {{
-        border-radius: 10px;
-        background: {primary_color}10;
-        border: 1px solid {primary_color}30;
-        padding: 1rem;
-    }}
-    
-    /* التبويبات */
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 12px;
-        background: {secondary_color};
-        padding: 0.5rem;
-        border-radius: 12px;
-    }}
-    
-    .stTabs [data-baseweb="tab"] {{
-        border-radius: 10px;
-        padding: 0.8rem 1.5rem;
-        transition: all 0.3s ease;
-    }}
-    
-    .stTabs [aria-selected="true"] {{
-        background: {primary_color};
-        color: white;
-    }}
-    
-    /* الخطوط العربية */
-    * {{
-        font-family: 'Cairo', sans-serif;
-    }}
-    
-    /* تأثيرات عامة */
-    .stMarkdown, .stContainer {{
-        transition: all 0.3s ease;
-    }}
+        /* تحسين الخط العربي */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        
+        html, body, [class*="css"] {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        /* البطاقات */
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin: 10px 0;
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .metric-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .metric-card.danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        /* ========== الشريط الجانبي ========== */
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] p {
+            color: white !important;
+        }
+        
+        /* أزرار القائمة الجانبية */
+        [data-testid="stSidebar"] .stButton > button {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #000000 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: right;
+            direction: rtl;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        [data-testid="stSidebar"] .stButton > button:hover {
+            background-color: rgba(102, 126, 234, 0.8);
+            border-color: rgba(102, 126, 234, 1);
+            color: #000000 !important;
+            transform: translateX(-5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        [data-testid="stSidebar"] .stButton > button:active,
+        [data-testid="stSidebar"] .stButton > button:focus {
+            background-color: rgba(102, 126, 234, 1);
+            border-color: rgba(102, 126, 234, 1);
+            color: #000000 !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+        
+        [data-testid="stSidebar"] .element-container div[data-testid="stMarkdownContainer"] p {
+            color: white !important;
+        }
+        
+        [data-testid="stSidebar"] .stAlert {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        [data-testid="stSidebar"] .stSuccess {
+            background-color: rgba(56, 239, 125, 0.2) !important;
+            color: #38ef7d !important;
+            border: 1px solid rgba(56, 239, 125, 0.4);
+        }
+        
+        [data-testid="stSidebar"] .stWarning {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+            color: #ffc107 !important;
+            border: 1px solid rgba(255, 193, 7, 0.4);
+        }
+        
+        [data-testid="stSidebar"] .stError {
+            background-color: rgba(220, 53, 69, 0.2) !important;
+            color: #ff6b6b !important;
+            border: 1px solid rgba(220, 53, 69, 0.4);
+        }
+        
+        [data-testid="stSidebar"] hr {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        [data-testid="stSidebar"] * {
+            color: #ffffff;
+        }
+        
+        [data-testid="stSidebar"] button span {
+            color: #000000 !important;
+        }
+        
+        /* الأزرار العادية */
+        .stButton>button {
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .stButton>button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* العنوان الرئيسي */
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* تقرير المريض */
+        .patient-report {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .report-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .report-section {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 20px 0;
+        }
+        
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        .report-table th {
+            background-color: #f8f9fa;
+            padding: 10px;
+            text-align: right;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .report-table td {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        /* تحسين المدخلات */
+        .stTextInput>div>div>input, .stSelectbox>div>div>select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 10px;
+        }
+        
+        .stTextInput>div>div>input:focus, .stSelectbox>div>div>select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
     </style>
-    """
-    
-    st.markdown(css, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)

@@ -1,21 +1,18 @@
-# inventory.py
-
 import streamlit as st
-import pandas as pd
 from datetime import date
 from database.crud import crud
 
 def render():
     """صفحة إدارة المخزون"""
-    st.markdown("## 📦 إدارة المخزون")
+    st.markdown("### 📦 إدارة المخزون")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 المخزون الحالي", "➕ إضافة صنف", "📉 المخزون المنخفض", "⏳ الأصناف المنتهية"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📋 جميع العناصر", "➕ عنصر جديد", "⚠️ مخزون منخفض", "📅 قريب الانتهاء"])
     
     with tab1:
-        render_current_inventory()
+        render_all_inventory()
     
     with tab2:
-        render_add_item()
+        render_add_inventory()
     
     with tab3:
         render_low_stock()
@@ -23,10 +20,9 @@ def render():
     with tab4:
         render_expiring_items()
 
-def render_current_inventory():
-    """عرض المخزون الحالي"""
+def render_all_inventory():
+    """عرض جميع عناصر المخزون"""
     inventory = crud.get_all_inventory()
-    
     if not inventory.empty:
         st.dataframe(
             inventory[['id', 'item_name', 'category', 'quantity', 'unit_price', 
@@ -35,106 +31,93 @@ def render_current_inventory():
             hide_index=True
         )
         
-        with st.expander("🔧 تعديل كمية صنف"):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                item_id = st.number_input("رقم الصنف", min_value=1, step=1)
-            with col2:
-                operation = st.selectbox("العملية", ["إضافة", "خصم", "تعيين"])
-            with col3:
-                quantity = st.number_input("الكمية", min_value=0, step=1)
-            
-            if st.button("تحديث الكمية"):
-                try:
-                    op_map = {"إضافة": "add", "خصم": "subtract", "تعيين": "set"}
-                    crud.update_inventory_quantity(item_id, quantity, op_map[operation])
-                    st.success(f"✅ تم {operation} الكمية بنجاح")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ خطأ: {str(e)}")
-        
-        with st.expander("🗑 حذف صنف"):
-            del_item_id = st.number_input("رقم الصنف للحذف", min_value=1, step=1, key="del_item")
-            if st.button("حذف الصنف", type="secondary"):
-                crud.delete_inventory_item(del_item_id)
-                st.success("✅ تم إلغاء تفعيل الصنف")
-                st.rerun()
+        # إحصائيات
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            total_items = len(inventory)
+            st.metric("إجمالي الأصناف", total_items)
+        with col2:
+            total_value = (inventory['quantity'] * inventory['unit_price']).sum()
+            st.metric("قيمة المخزون", f"{total_value:,.0f} ج.م")
+        with col3:
+            low_stock_count = len(inventory[inventory['quantity'] <= inventory['min_stock_level']])
+            st.metric("أصناف منخفضة", low_stock_count)
     else:
-        st.info("المخزون فارغ حالياً")
+        st.info("لا توجد عناصر في المخزون")
 
-def render_add_item():
-    """إضافة صنف جديد"""
-    st.markdown("### ➕ إضافة صنف للمخزون")
+def render_add_inventory():
+    """نموذج إضافة عنصر جديد"""
+    st.markdown("#### إضافة عنصر جديد")
     
     suppliers = crud.get_all_suppliers()
     
     col1, col2 = st.columns(2)
     
     with col1:
-        item_name = st.text_input("اسم الصنف *")
-        category = st.selectbox("الفئة", ["مستهلكات", "أدوية", "مواد طبية", "منتجات", "أخرى"])
-        quantity = st.number_input("الكمية الأولية", min_value=0, step=1)
-        unit_price = st.number_input("سعر الوحدة", min_value=0.0, step=1.0)
-        min_stock = st.number_input("الحد الأدنى للمخزون", min_value=0, value=10, step=1)
+        item_name = st.text_input("اسم العنصر*")
+        category = st.selectbox("التصنيف", ["مستهلكات", "أدوية", "أجهزة", "مواد طبية", "منتجات", "أخرى"])
+        quantity = st.number_input("الكمية*", min_value=0, step=1)
+        unit_price = st.number_input("سعر الوحدة (ج.م)", min_value=0.0, step=1.0)
+        min_stock_level = st.number_input("الحد الأدنى للمخزون", min_value=0, value=10, step=1)
     
     with col2:
+        location = st.text_input("الموقع/المخزن", placeholder="مثال: مخزن A")
+        barcode = st.text_input("الباركود", placeholder="اختياري")
+        expiry_date = st.date_input("تاريخ انتهاء الصلاحية", min_value=date.today())
+        
         supplier_id = st.selectbox(
             "المورد",
-            [None] + suppliers['id'].tolist(),
-            format_func=lambda x: "لا يوجد" if x is None else suppliers[suppliers['id'] == x]['name'].iloc[0]
+            [None] + suppliers['id'].tolist() if not suppliers.empty else [None],
+            format_func=lambda x: "بدون مورد" if x is None else suppliers[suppliers['id'] == x]['name'].iloc[0]
         ) if not suppliers.empty else None
-        
-        expiry_date = st.date_input("تاريخ الانتهاء (اختياري)", value=None)
-        location = st.text_input("موقع التخزين", value="المخزن الرئيسي")
-        barcode = st.text_input("الباركود (اختياري)")
     
-    if st.button("💾 حفظ الصنف", type="primary", use_container_width=True):
+    if st.button("إضافة العنصر", type="primary", use_container_width=True):
         if item_name and quantity >= 0:
             try:
                 crud.create_inventory_item(
-                    item_name, category, quantity, unit_price, min_stock,
-                    supplier_id, 
+                    item_name, category, quantity, unit_price,
+                    min_stock_level, supplier_id,
                     expiry_date.isoformat() if expiry_date else None,
                     location, barcode
                 )
-                st.success("✅ تم إضافة الصنف بنجاح")
+                st.success("✅ تم إضافة العنصر بنجاح!")
                 st.balloons()
                 st.rerun()
             except Exception as e:
-                st.error(f"❌ خطأ: {str(e)}")
+                st.error(f"حدث خطأ: {str(e)}")
         else:
-            st.warning("⚠️ يرجى ملء الحقول المطلوبة")
+            st.warning("الرجاء ملء الحقول المطلوبة")
 
 def render_low_stock():
     """عرض الأصناف منخفضة المخزون"""
-    st.markdown("### 📉 الأصناف المنخفضة")
-    
     low_stock = crud.get_low_stock_items()
-    
     if not low_stock.empty:
-        st.warning(f"⚠️ يوجد {len(low_stock)} صنف تحت الحد الأدنى")
+        st.warning(f"⚠️ يوجد {len(low_stock)} عنصر بمخزون منخفض")
         st.dataframe(
-            low_stock[['item_name', 'category', 'quantity', 'min_stock_level']],
+            low_stock[['item_name', 'category', 'quantity', 'min_stock_level', 'supplier_name']],
             use_container_width=True,
             hide_index=True
         )
     else:
-        st.success("✅ جميع الأصناف في المستوى الآمن")
+        st.success("✅ جميع العناصر في المستوى الآمن")
 
 def render_expiring_items():
     """عرض الأصناف قريبة الانتهاء"""
-    st.markdown("### ⏳ الأصناف قريبة الانتهاء")
-    
-    days = st.slider("عرض الأصناف التي تنتهي خلال (يوم)", 7, 90, 30)
-    
-    expiring = crud.get_expiring_inventory(days)
-    
+    expiring = crud.get_expiring_inventory(days=60)
     if not expiring.empty:
-        st.error(f"🚨 يوجد {len(expiring)} صنف ينتهي خلال {days} يوم")
+        st.warning(f"📅 يوجد {len(expiring)} صنف ينتهي خلال 60 يوم")
+        
         st.dataframe(
-            expiring[['item_name', 'category', 'quantity', 'expiry_date', 'days_to_expire']],
+            expiring.rename(columns={
+                'item_name': 'الصنف',
+                'category': 'الفئة',
+                'quantity': 'الكمية',
+                'expiry_date': 'تاريخ الانتهاء',
+                'supplier_name': 'المورد',
+                'days_to_expire': 'الأيام المتبقية'
+            }),
             use_container_width=True,
             hide_index=True
         )
     else:
-        st.success(f"✅ لا توجد أصناف تنتهي خلال {days} يوم")
+        st.success("✅ لا توجد أصناف قريبة من الانتهاء")
